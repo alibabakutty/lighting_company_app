@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "417986149944",
+    "project_id": "lighting-company-app",
+    "storage_bucket": "lighting-company-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:417986149944:android:ab8f29725f5db7b95530cd",
+        "android_client_info": {
+          "package_name": "com.example.lighting_company_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKLZWEuREd3AYflwee7N6H5H-wBze7iyo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
