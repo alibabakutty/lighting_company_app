@@ -23,6 +23,10 @@ class _ItemMasterState extends State<ItemMaster> {
   );
   final TextEditingController _itemRateAmountController =
       TextEditingController();
+  final TextEditingController _gstRateController = TextEditingController();
+  final TextEditingController _gstAmountController = TextEditingController();
+  final TextEditingController _totalAmountController = TextEditingController();
+  final TextEditingController _mrpAmountController = TextEditingController();
   String? _selectedStatus;
 
   bool _isSubmitting = false;
@@ -65,6 +69,10 @@ class _ItemMasterState extends State<ItemMaster> {
           _itemNameController.text = data.itemName;
           _uomController.text = data.uom;
           _itemRateAmountController.text = data.itemRateAmount.toString();
+          _gstRateController.text = data.gstRate.toString();
+          _gstAmountController.text = data.gstAmount.toString();
+          _totalAmountController.text = data.totalAmount.toString();
+          _mrpAmountController.text = data.mrpAmount.toString();
           _selectedStatus = data.itemStatus ? 'Active' : 'Inactive';
         });
       } else {
@@ -97,6 +105,10 @@ class _ItemMasterState extends State<ItemMaster> {
               ? _uomController.text.trim()
               : 'Nos',
           itemRateAmount: double.parse(_itemRateAmountController.text.trim()),
+          gstRate: double.parse(_gstRateController.text.trim()),
+          gstAmount: double.parse(_gstAmountController.text.trim()),
+          totalAmount: double.parse(_totalAmountController.text.trim()),
+          mrpAmount: double.parse(_mrpAmountController.text.trim()),
           itemStatus: _selectedStatus == 'Active',
           timestamp: _itemMasterData?.timestamp ?? Timestamp.now(),
         );
@@ -178,6 +190,10 @@ class _ItemMasterState extends State<ItemMaster> {
     _itemNameController.dispose();
     _uomController.dispose();
     _itemRateAmountController.dispose();
+    _gstRateController.dispose();
+    _gstAmountController.dispose();
+    _totalAmountController.dispose();
+    _mrpAmountController.dispose();
     super.dispose();
   }
 
@@ -302,6 +318,106 @@ class _ItemMasterState extends State<ItemMaster> {
                           if (double.tryParse(value) == null) {
                             return 'Invalid amount';
                           }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // GST Rate Field
+                      TextFormField(
+                        controller: _gstRateController,
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'GST Rate (%)',
+                          prefixIcon: const Icon(Icons.percent),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                        ),
+                        readOnly: widget.isDisplayMode,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Required';
+                          if (double.tryParse(value) == null)
+                            return 'Invalid number';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // GST Amount Field
+                      TextFormField(
+                        controller: _gstAmountController,
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'GST Amount (₹)',
+                          prefixIcon: const Icon(Icons.currency_rupee),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                        ),
+                        readOnly: widget.isDisplayMode,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Required';
+                          if (double.tryParse(value) == null)
+                            return 'Invalid amount';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Total Amount Field
+                      TextFormField(
+                        controller: _totalAmountController,
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Total Amount (₹)',
+                          prefixIcon: const Icon(Icons.currency_rupee),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                        ),
+                        readOnly: widget.isDisplayMode,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Required';
+                          if (double.tryParse(value) == null)
+                            return 'Invalid amount';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // MRP Amount Field
+                      TextFormField(
+                        controller: _mrpAmountController,
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'MRP Amount (₹)',
+                          prefixIcon: const Icon(Icons.currency_rupee),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                        ),
+                        readOnly: widget.isDisplayMode,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Required';
+                          if (double.tryParse(value) == null)
+                            return 'Invalid amount';
                           return null;
                         },
                       ),

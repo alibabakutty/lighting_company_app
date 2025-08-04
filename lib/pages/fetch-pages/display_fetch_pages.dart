@@ -14,12 +14,12 @@ class DisplayFetchPage extends StatefulWidget {
 class _DisplayFetchPageState extends State<DisplayFetchPage> {
   List<Map<String, dynamic>> items = [];
   List<Map<String, dynamic>> suppliers = [];
-  List<Map<String, dynamic>> tables = [];
+  List<Map<String, dynamic>> customers = [];
 
   bool isLoading = false;
   bool hasFetchedItems = false;
   bool hasFetchedSuppliers = false;
-  bool hasFetchedTables = false;
+  bool hasFetchedCustomers = false;
 
   @override
   void initState() {
@@ -38,11 +38,11 @@ class _DisplayFetchPageState extends State<DisplayFetchPage> {
         case 'item':
           await _fetchItems();
           break;
-        case 'supplier':
+        case 'executive':
           await _fetchSuppliers();
           break;
-        case 'table':
-          await _fetchTables();
+        case 'customer':
+          await _fetchCustomers();
           break;
       }
     } catch (e) {
@@ -112,30 +112,30 @@ class _DisplayFetchPageState extends State<DisplayFetchPage> {
     }
   }
 
-  Future<void> _fetchTables() async {
+  Future<void> _fetchCustomers() async {
     try {
       QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('table_master_data')
+          .collection('customer_master_data')
           .get();
 
       if (!mounted) return;
 
       setState(() {
-        tables = snapshot.docs.map((doc) {
+        customers = snapshot.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           return {
-            'number': data['table_number'] as int? ?? 0,
-            'capacity': data['table_capacity'] as int? ?? 0,
-            'status': data['table_availability'] as bool? ?? false,
+            'name': data['customer_name'] as String? ?? '',
+            'mobile': data['mobile_number'] as String? ?? '',
+            'email': data['email'] as String? ?? '',
           };
         }).toList();
-        hasFetchedTables = true;
+        hasFetchedCustomers = true;
       });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error fetching tables: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error fetching customers: $e')));
     }
   }
 
@@ -147,16 +147,16 @@ class _DisplayFetchPageState extends State<DisplayFetchPage> {
           extra: {'itemName': value, 'isDisplayMode': true},
         );
         break;
-      case 'supplier':
+      case 'executive':
         context.go(
           '/supplier_master',
           extra: {'supplierName': value, 'isDisplayMode': true},
         );
         break;
-      case 'table':
+      case 'customer':
         context.go(
-          '/table_master',
-          extra: {'tableNumber': value, 'isDisplayMode': true},
+          '/customer_master',
+          extra: {'customer_name': value, 'isDisplayMode': true},
         );
         break;
     }
@@ -188,10 +188,10 @@ class _DisplayFetchPageState extends State<DisplayFetchPage> {
     switch (widget.masterType) {
       case 'item':
         return 'ITEM MASTER';
-      case 'supplier':
-        return 'SUPPLIER MASTER';
-      case 'table':
-        return 'TABLE MASTER';
+      case 'executive':
+        return 'EXECUTIVE MASTER';
+      case 'customer':
+        return 'CUSTOMER MASTER';
       default:
         return 'Master Data';
     }
@@ -211,23 +211,22 @@ class _DisplayFetchPageState extends State<DisplayFetchPage> {
           icon: Icons.fastfood,
           valueFormatter: (value) => '₹ ${value.toStringAsFixed(2)}',
         );
-      case 'supplier':
+      case 'executive':
         return _buildMasterList(
-          header: const ['Supplier Name', 'Contact'],
+          header: const ['Executive Name', 'Contact'],
           data: suppliers,
           nameKey: 'name',
           secondaryKey: 'contact',
           icon: Icons.business,
         );
-      case 'table':
+      case 'customer':
         return _buildMasterList(
-          header: const ['Table No.', 'Capacity', 'Status'],
-          data: tables,
-          nameKey: 'number',
-          secondaryKey: 'capacity',
-          tertiaryKey: 'status',
-          icon: Icons.table_restaurant,
-          valueFormatter: (value) => value ? 'Active' : 'Inactive',
+          header: const ['Customer Name', 'Mobile', 'Email'],
+          data: customers,
+          nameKey: 'name',
+          secondaryKey: 'mobile',
+          tertiaryKey: 'email',
+          icon: Icons.person,
         );
       default:
         return const Center(child: Text('Select a master type'));
@@ -263,9 +262,15 @@ class _DisplayFetchPageState extends State<DisplayFetchPage> {
       );
     }
 
+    // Determine column flex values based on master type
+    final int firstFlex = widget.masterType == 'item' ? 1 : 2;
+    final int secondFlex = widget.masterType == 'item' ? 3 : 2;
+    final int thirdFlex = widget.masterType == 'customer' ? 3 : 1;
+    final int fourthFlex = 1;
+
     return Column(
       children: [
-        // Header Row (unchanged)
+        // Header Row
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           decoration: BoxDecoration(
@@ -274,9 +279,9 @@ class _DisplayFetchPageState extends State<DisplayFetchPage> {
           ),
           child: Row(
             children: [
-              // First column (Code for items, otherwise nameKey)
-              SizedBox(
-                width: header.length > 2 ? 60 : null,
+              // First column
+              Flexible(
+                flex: firstFlex,
                 child: Text(
                   header[0],
                   style: const TextStyle(
@@ -285,10 +290,11 @@ class _DisplayFetchPageState extends State<DisplayFetchPage> {
                   ),
                 ),
               ),
-              // Second column (Item Name for items, otherwise secondaryKey)
-              Expanded(
+              // Second column
+              Flexible(
+                flex: secondFlex,
                 child: Padding(
-                  padding: EdgeInsets.only(left: header.length > 2 ? 0 : 8.0),
+                  padding: const EdgeInsets.only(left: 8.0),
                   child: Text(
                     header[1],
                     style: const TextStyle(
@@ -300,35 +306,40 @@ class _DisplayFetchPageState extends State<DisplayFetchPage> {
               ),
               // Third column (if exists)
               if (header.length > 2)
-                SizedBox(
-                  width: 50,
-                  child: Text(
-                    header[2],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                Flexible(
+                  flex: thirdFlex,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Text(
+                      header[2],
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
               // Fourth column (if exists)
               if (header.length > 3)
-                SizedBox(
-                  width: 70,
-                  child: Text(
-                    header[3],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                Flexible(
+                  flex: fourthFlex,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Text(
+                      header[3],
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.right,
                     ),
-                    textAlign: TextAlign.right,
                   ),
                 ),
             ],
           ),
         ),
         const SizedBox(height: 8),
-        // Data List (modified to reorder for items)
+        // Data List
         Expanded(
           child: ListView.builder(
             itemCount: data.length,
@@ -353,30 +364,28 @@ class _DisplayFetchPageState extends State<DisplayFetchPage> {
                     ),
                     child: Row(
                       children: [
-                        // First column (Code for items, otherwise nameKey)
-                        SizedBox(
-                          width: header.length > 2 ? 60 : null,
+                        // First column
+                        Flexible(
+                          flex: firstFlex,
                           child: Text(
                             widget.masterType == 'item'
-                                ? item[secondaryKey]
-                                      .toString() // Show Code first
+                                ? item[secondaryKey].toString()
                                 : item[nameKey].toString(),
                             style: TextStyle(
                               color: isActive ? Colors.black : Colors.grey,
                               fontSize: 13,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        // Second column (Item Name for items, otherwise secondaryKey)
-                        Expanded(
+                        // Second column
+                        Flexible(
+                          flex: secondFlex,
                           child: Padding(
-                            padding: EdgeInsets.only(
-                              left: header.length > 2 ? 0 : 8.0,
-                            ),
+                            padding: const EdgeInsets.only(left: 8.0),
                             child: Text(
                               widget.masterType == 'item'
-                                  ? item[nameKey]
-                                        .toString() // Show Name second
+                                  ? item[nameKey].toString()
                                   : item[secondaryKey].toString(),
                               style: TextStyle(
                                 color: isActive ? Colors.black : Colors.grey,
@@ -388,35 +397,42 @@ class _DisplayFetchPageState extends State<DisplayFetchPage> {
                         ),
                         // Third column (if exists)
                         if (tertiaryKey != null)
-                          SizedBox(
-                            width: 50,
-                            child: Text(
-                              header.length > 3
-                                  ? item[tertiaryKey].toString()
-                                  : valueFormatter != null
-                                  ? valueFormatter(item[tertiaryKey])
-                                  : item[tertiaryKey].toString(),
-                              style: TextStyle(
-                                color: isActive ? Colors.black : Colors.grey,
-                                fontSize: 13,
+                          Flexible(
+                            flex: thirdFlex,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Text(
+                                header.length > 3
+                                    ? item[tertiaryKey].toString()
+                                    : valueFormatter != null
+                                    ? valueFormatter(item[tertiaryKey])
+                                    : item[tertiaryKey].toString(),
+                                style: TextStyle(
+                                  color: isActive ? Colors.black : Colors.grey,
+                                  fontSize: 13,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              textAlign: TextAlign.center,
                             ),
                           ),
                         // Fourth column (if exists)
                         if (quaternaryKey != null)
-                          SizedBox(
-                            width: 70,
-                            child: Text(
-                              valueFormatter != null
-                                  ? valueFormatter(item[quaternaryKey])
-                                  : item[quaternaryKey].toString(),
-                              style: TextStyle(
-                                color: isActive ? Colors.black : Colors.grey,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
+                          Flexible(
+                            flex: fourthFlex,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Text(
+                                valueFormatter != null
+                                    ? valueFormatter(item[quaternaryKey])
+                                    : item[quaternaryKey].toString(),
+                                style: TextStyle(
+                                  color: isActive ? Colors.black : Colors.grey,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.right,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              textAlign: TextAlign.right,
                             ),
                           ),
                       ],

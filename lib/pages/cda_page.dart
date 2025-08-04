@@ -10,7 +10,7 @@ class CdaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${masterType.capitalize()} Master'),
+        title: Text('${masterType.toUpperCase()} MASTER'),
         leading: IconButton(
           onPressed: () {
             context.go('/admin_dashboard');
@@ -40,11 +40,11 @@ class CdaPage extends StatelessWidget {
                         extra: {'isDisplayMode': false},
                       );
                       break;
-                    case 'supplier':
+                    case 'executive':
                       context.go('/supplier_master');
                       break;
-                    case 'table':
-                      context.go('/table_master');
+                    case 'customer':
+                      context.go('/customer_master');
                       break;
                     default:
                   }
@@ -103,9 +103,4 @@ class CdaPage extends StatelessWidget {
       onPressed: onPressed,
     );
   }
-}
-
-// Helper extension to capitalize strings
-extension StringExtension on String {
-  String capitalize() => this[0].toUpperCase() + substring(1);
 }

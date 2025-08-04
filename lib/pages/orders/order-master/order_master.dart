@@ -4,8 +4,6 @@ import 'package:lighting_company_app/authentication/auth_models.dart';
 import 'package:lighting_company_app/authentication/auth_service.dart';
 import 'package:lighting_company_app/models/item_master_data.dart';
 import 'package:lighting_company_app/models/order_item_data.dart';
-import 'package:lighting_company_app/models/table_master_data.dart';
-import 'package:lighting_company_app/pages/orders/guest_info_section.dart';
 import 'package:lighting_company_app/pages/orders/order-master/order_item_row.dart';
 import 'package:lighting_company_app/pages/orders/order-master/order_utils.dart';
 import 'package:lighting_company_app/service/firebase_service.dart';
@@ -30,14 +28,9 @@ class _OrderMasterState extends State<OrderMaster> {
   final _femaleController = TextEditingController();
   final _kidsController = TextEditingController();
 
-  bool _showTableAllocation = false;
-  bool _isLoadingTables = false;
-  TableMasterData? _selectedTable;
   final FirebaseService _firebaseService = FirebaseService();
-  List<TableMasterData> _availableTables = [];
   List<ItemMasterData> _allItems = [];
   bool _isLoadingItems = false;
-  bool _isGuestInfoExpanded = true;
 
   // order number tracking
   int _orderCounter = 0;
@@ -69,76 +62,6 @@ class _OrderMasterState extends State<OrderMaster> {
     _loadOrderCounter();
     _fetchSupplierData();
     _loadAllItems();
-  }
-
-  Future<void> _loadAvailableTables() async {
-    setState(() => _isLoadingTables = true);
-    try {
-      final tables = await _firebaseService.getAllTables();
-      setState(() {
-        _availableTables = tables
-            .where((table) => table.tableAvailability)
-            .toList();
-      });
-    } catch (e) {
-      debugPrint('Error loading tables: $e');
-    } finally {
-      setState(() => _isLoadingTables = false);
-    }
-  }
-
-  Future<void> _showTableSelectionDialog(BuildContext context) async {
-    await _loadAvailableTables(); // Load tables before showing dialog
-
-    showDialog(
-      // ignore: use_build_context_synchronously
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Select a Table'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: _isLoadingTables
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: _availableTables.length,
-                    itemBuilder: (context, index) {
-                      final table = _availableTables[index];
-                      final isSelected =
-                          _selectedTable?.tableNumber == table.tableNumber;
-
-                      return ListTile(
-                        leading: Radio<TableMasterData>(
-                          value: table,
-                          groupValue: _selectedTable,
-                          onChanged: (t) {
-                            _onTableSelected(t);
-                            Navigator.pop(context);
-                          },
-                        ),
-                        title: Text('Table ${table.tableNumber}'),
-                        subtitle: Text('Capacity: ${table.tableCapacity}'),
-                        trailing: isSelected
-                            ? const Icon(Icons.check, color: Colors.green)
-                            : null,
-                        onTap: () {
-                          _onTableSelected(table);
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
-                  ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   bool _isDuplicateItem(String itemCode) {
@@ -281,16 +204,6 @@ class _OrderMasterState extends State<OrderMaster> {
         return;
       }
 
-      if (_selectedTable == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a table first'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
       try {
         // Generate order number after click submit button
         _currentOrderNumber = _generateOrderNumber();
@@ -310,7 +223,6 @@ class _OrderMasterState extends State<OrderMaster> {
 
         final success = await FirebaseService().addOrderMasterData(
           orderItems: validOrderItems, // Use the filtered list
-          table: _selectedTable!,
           orderNumber: _currentOrderNumber,
           totalQty: totalQty,
           totalAmount: totalAmount,
@@ -325,7 +237,7 @@ class _OrderMasterState extends State<OrderMaster> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Order $_currentOrderNumber for Table ${_selectedTable!.tableNumber} submitted successfully!',
+                'Order $_currentOrderNumber submitted successfully!',
               ),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 3),
@@ -357,27 +269,6 @@ class _OrderMasterState extends State<OrderMaster> {
           ),
         );
       }
-    }
-  }
-
-  void _onTableSelected(TableMasterData? table) {
-    if (table != null && _selectedTable?.tableNumber != table.tableNumber) {
-      // Generate new order number when a new table is selected
-      setState(() {
-        _selectedTable = table;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Table ${table.tableNumber} selected'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else if (table == null) {
-      setState(() {
-        _selectedTable = null;
-        _showTableAllocation = false;
-      });
     }
   }
 
@@ -468,46 +359,6 @@ class _OrderMasterState extends State<OrderMaster> {
           key: _formKey,
           child: Column(
             children: [
-              // Guest Info Section
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: GuestInfoSection(
-                  quantityController: _quantityController,
-                  maleController: _maleController,
-                  femaleController: _femaleController,
-                  kidsController: _kidsController,
-                  onTableAllocatePressed: () {
-                    setState(() {
-                      _showTableAllocation = true;
-                      _isGuestInfoExpanded = true;
-                    });
-                    _showTableSelectionDialog(context);
-                  },
-                  onExpansionChanged: (isExpanded) {
-                    setState(() {
-                      _isGuestInfoExpanded = isExpanded;
-                      if (!isExpanded) {
-                        _showTableAllocation = false;
-                      }
-                    });
-                  },
-                  selectedTable: _selectedTable?.tableNumber.toString(),
-                  totalMembers: int.tryParse(_quantityController.text),
-                  orderNumber: _currentOrderNumber,
-                ),
-              ),
-
-              // Table Allocation Section
-              if (_isGuestInfoExpanded && _showTableAllocation) ...[
-                const SizedBox(height: 4),
-                _isLoadingTables
-                    ? const Center(child: CircularProgressIndicator())
-                    : SizedBox(height: 4),
-              ],
-
               // Order Items Section
               const SizedBox(height: 2),
               Expanded(

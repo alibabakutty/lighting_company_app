@@ -229,17 +229,17 @@ class _SupplierMasterState extends State<SupplierMaster> {
       appBar: AppBar(
         title: Text(
           widget.isDisplayMode
-              ? 'Supplier Details: ${supplierNameFromArgs ?? widget.supplierName ?? ''}'
+              ? 'EXECUTIVE DETAILS: ${supplierNameFromArgs ?? widget.supplierName ?? ''}'
               : _isEditing
-              ? 'Edit Supplier: ${supplierNameFromArgs ?? widget.supplierName ?? ''}'
-              : 'Create New Supplier',
+              ? 'EDIT EXECUTIVE: ${supplierNameFromArgs ?? widget.supplierName ?? ''}'
+              : 'CREATE NEW EXECUTIVE',
         ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.teal,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/cda_page', extra: 'supplier'),
+          onPressed: () => context.go('/cda_page', extra: 'executive'),
         ),
         actions: [
           if (widget.isDisplayMode)
@@ -270,7 +270,7 @@ class _SupplierMasterState extends State<SupplierMaster> {
                   children: [
                     const SizedBox(height: 20),
                     const Text(
-                      'Supplier Registration',
+                      'EXECUTIVE REGISTRATION',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -279,11 +279,11 @@ class _SupplierMasterState extends State<SupplierMaster> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Supplier Name Field
+                    // Executive Name Field
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
-                        labelText: 'Supplier Name',
+                        labelText: 'Executive Name',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -403,7 +403,7 @@ class _SupplierMasterState extends State<SupplierMaster> {
                                 color: Colors.white,
                               )
                             : const Text(
-                                'Register Supplier',
+                                'Register Executive',
                                 style: TextStyle(fontSize: 18),
                               ),
                       ),

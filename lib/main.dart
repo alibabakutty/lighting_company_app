@@ -12,9 +12,9 @@ import 'package:lighting_company_app/pages/fetch-pages/update_fetch_pages.dart';
 import 'package:lighting_company_app/pages/import_item.dart';
 import 'package:lighting_company_app/pages/login-pages/admin_login.dart';
 import 'package:lighting_company_app/pages/login-pages/supplier_login.dart';
+import 'package:lighting_company_app/pages/masters/customer_master.dart';
 import 'package:lighting_company_app/pages/masters/item_master.dart';
 import 'package:lighting_company_app/pages/masters/supplier_master.dart';
-import 'package:lighting_company_app/pages/masters/table_master.dart';
 import 'package:lighting_company_app/pages/order_history.dart';
 import 'package:lighting_company_app/pages/orders/order-master/order_master.dart';
 import 'package:provider/provider.dart';
@@ -41,7 +41,10 @@ final _router = GoRouter(
   redirect: (BuildContext context, GoRouterState state) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    if (authProvider.isLoading) return null;
+    if (authProvider.isLoading) {
+      debugPrint('Returning null (still loading)');
+      return null;
+    }
 
     final isLoggedIn = authProvider.isAuthenticated;
     final isAdmin = authProvider.isAdmin;
@@ -51,14 +54,17 @@ final _router = GoRouter(
 
     // If not logged in and trying to access protected route
     if (!isLoggedIn && !isLoginRoute && state.matchedLocation != '/') {
+      debugPrint('Redirecting to / (not logged in)');
       return '/';
     }
 
     // If logged in and trying to access login page
     if (isLoggedIn && isLoginRoute) {
-      return isAdmin ? '/admin_dashboard' : '/order_master';
+      final target = isAdmin ? '/admin_dashboard' : '/order_master';
+      debugPrint('Redirecting to $target (already logged in)');
+      return target;
     }
-
+    debugPrint('No redirect needed');
     return null;
   },
   routes: [
@@ -104,7 +110,7 @@ final _router = GoRouter(
           path: 'update_fetch',
           builder: (context, state) {
             final masterType = state.extra as String;
-            return UpdateFetchPage(masterType: masterType);
+            return UpdateFetchPages(masterType: masterType);
           },
         ),
         GoRoute(
@@ -128,11 +134,11 @@ final _router = GoRouter(
           },
         ),
         GoRoute(
-          path: 'table_master',
+          path: 'customer_master',
           builder: (context, state) {
             final args = state.extra as Map<String, dynamic>? ?? {};
-            return TableMaster(
-              tableNumber: args['tableNumber'],
+            return CustomerMaster(
+              customerName: args['customer_name'],
               isDisplayMode: args['isDisplayMode'] ?? false,
             );
           },

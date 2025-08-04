@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lighting_company_app/models/customer_master_data.dart';
 import 'package:lighting_company_app/models/item_master_data.dart';
 import 'package:lighting_company_app/models/order_item_data.dart';
 import 'package:lighting_company_app/models/supplier_master_data.dart';
-import 'package:lighting_company_app/models/table_master_data.dart';
 
 class FirebaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -40,15 +40,17 @@ class FirebaseService {
   }
 
   // add table master data to firestore
-  Future<bool> addTableMasterData(TableMasterData tableMasterData) async {
+  Future<bool> addCustomerMasterData(
+    CustomerMasterData customerMasterData,
+  ) async {
     try {
       await _db
-          .collection('table_master_data')
-          .add(tableMasterData.tofirestore());
+          .collection('customer_master_data')
+          .add(customerMasterData.toFirestore());
       return true;
     } catch (e) {
       // ignore: avoid_print
-      print('Error adding table master data: $e');
+      print('Error adding customer master data: $e');
       return false;
     }
   }
@@ -56,7 +58,6 @@ class FirebaseService {
   // Add complete order with items to Firestore
   Future<bool> addOrderMasterData({
     required List<OrderItem> orderItems,
-    required TableMasterData table,
     required String orderNumber,
     required double totalQty,
     required double totalAmount,
@@ -70,7 +71,6 @@ class FirebaseService {
 
       DocumentReference orderRef = await _db.collection('orders').add({
         'order_number': orderNumber,
-        'table_number': table.tableNumber,
         'supplier_name': supplierName, // 👈 Save to Firestore
         'total_quantity': totalQty,
         'total_amount': totalAmount,
@@ -161,15 +161,17 @@ class FirebaseService {
   }
 
   // fetch tablemasterdata by tablenumber
-  Future<TableMasterData?> getTableByTableNumber(int tableNumber) async {
+  Future<CustomerMasterData?> getCustomerByCustomerName(
+    String customerName,
+  ) async {
     final snapshot = await FirebaseFirestore.instance
-        .collection('table_master_data')
-        .where('table_number', isEqualTo: tableNumber)
+        .collection('customer_master_data')
+        .where('customer_name', isEqualTo: customerName)
         .limit(1)
         .get();
 
     if (snapshot.docs.isNotEmpty) {
-      return TableMasterData.fromfirestore(snapshot.docs.first.data());
+      return CustomerMasterData.fromfirestore(snapshot.docs.first.data());
     }
     return null;
   }
@@ -507,13 +509,15 @@ class FirebaseService {
   }
 
   // fetch all tables
-  Future<List<TableMasterData>> getAllTables() async {
+  Future<List<CustomerMasterData>> getAllCustomers() async {
     try {
-      QuerySnapshot snapshot = await _db.collection('table_master_data').get();
+      QuerySnapshot snapshot = await _db
+          .collection('customer_master_data')
+          .get();
 
       return snapshot.docs
           .map(
-            (doc) => TableMasterData.fromfirestore(
+            (doc) => CustomerMasterData.fromfirestore(
               doc.data() as Map<String, dynamic>,
             ),
           )
@@ -753,16 +757,16 @@ class FirebaseService {
   }
 
   // update table master data by table number
-  Future<bool> updateTableMasterDataByTableNumber(
-    int oldTableNumber,
-    TableMasterData updatedData,
+  Future<bool> updateCustomerMasterDataByCustomerName(
+    String oldCustomerName,
+    CustomerMasterData updatedData,
   ) async {
     try {
       // first check if the new no is already taken by another table number
-      if (oldTableNumber != updatedData.tableNumber) {
+      if (oldCustomerName != updatedData.customerName) {
         QuerySnapshot duplicateCheck = await _db
-            .collection('table_master_data')
-            .where('table_number', isEqualTo: updatedData.tableNumber)
+            .collection('customer_master_data')
+            .where('customer_name', isEqualTo: updatedData.customerName)
             .limit(1)
             .get();
 
@@ -773,17 +777,17 @@ class FirebaseService {
 
       // Find the document by the old table number
       QuerySnapshot snapshot = await _db
-          .collection('table_master_data')
-          .where('table_number', isEqualTo: oldTableNumber)
+          .collection('customer_master_data')
+          .where('customer_name', isEqualTo: oldCustomerName)
           .limit(1)
           .get();
 
       if (snapshot.docs.isNotEmpty) {
         String docId = snapshot.docs.first.id;
-        await _db.collection('table_master_data').doc(docId).update({
-          'table_number': updatedData.tableNumber,
-          'table_capacity': updatedData.tableCapacity,
-          'table_availability': updatedData.tableAvailability,
+        await _db.collection('customer_master_data').doc(docId).update({
+          'customer_name': updatedData.customerName,
+          'mobile_number': updatedData.mobileNumber,
+          'email': updatedData.email,
           'created_at': FieldValue.serverTimestamp(),
         });
         return true;

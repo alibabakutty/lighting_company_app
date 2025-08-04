@@ -142,31 +142,32 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     },
                   ),
                   const SizedBox(height: 5),
-                  // Supplier Master Card
+
+                  // Customer Master Card
                   _buildMasterCard(
                     context,
-                    title: 'Supplier Master',
-                    subtitle: 'Manage your suppliers',
+                    title: 'Customer Master',
+                    subtitle: 'Manage your customers',
                     icon: Icons.people_alt_outlined,
                     color: Colors.teal,
                     onTap: () {
-                      context.go('/cda_page', extra: 'supplier');
+                      context.go('/cda_page', extra: 'customer');
                     },
                   ),
                   const SizedBox(height: 5),
-                  // Table Master Card
+                  // Executive Master Card
                   _buildMasterCard(
                     context,
-                    title: 'Table Master',
-                    subtitle: 'Manage your tables',
-                    icon: Icons.table_restaurant_outlined,
-                    color: Colors.orange.shade700,
+                    title: 'Executive Master',
+                    subtitle: 'Manage your executives',
+                    icon: Icons.person_outline,
+                    color: Colors.blue.shade700,
                     onTap: () {
-                      context.go('/cda_page', extra: 'table');
+                      context.go('/cda_page', extra: 'executive');
                     },
                   ),
                   const SizedBox(height: 5),
-                  // Table Master Card
+                  // Import Item Master Card
                   _buildMasterCard(
                     context,
                     title: 'Import Items via Excel',
@@ -178,11 +179,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     },
                   ),
                   const SizedBox(height: 5),
-                  // Table Master Card
+                  // Order Master Card
                   _buildMasterCard(
                     context,
-                    title: 'Orders History',
-                    subtitle: 'Preview all orders',
+                    title: 'Order Master',
+                    subtitle: 'Manage your Orders',
+                    icon: Icons.receipt_long_outlined,
+                    color: Colors.orange.shade700,
+                    onTap: () {
+                      context.go('/order_master');
+                    },
+                  ),
+                  const SizedBox(height: 5),
+                  // Report Card
+                  _buildMasterCard(
+                    context,
+                    title: 'Orders Report',
+                    subtitle: 'Report for all orders',
                     icon: Icons.history_outlined,
                     color: Colors.purple.shade700,
                     onTap: () {

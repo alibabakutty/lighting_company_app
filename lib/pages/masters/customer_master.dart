@@ -1,56 +1,62 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lighting_company_app/models/table_master_data.dart';
+import 'package:lighting_company_app/models/customer_master_data.dart';
 import 'package:lighting_company_app/service/firebase_service.dart';
 
-class TableMaster extends StatefulWidget {
-  final int? tableNumber;
+class CustomerMaster extends StatefulWidget {
+  final String? customerName;
   final bool isDisplayMode;
-  const TableMaster({super.key, this.tableNumber, this.isDisplayMode = false});
+  const CustomerMaster({
+    super.key,
+    this.customerName,
+    this.isDisplayMode = false,
+  });
 
   @override
-  State<TableMaster> createState() => _TableMasterState();
+  State<CustomerMaster> createState() => _CustomerMasterState();
 }
 
-class _TableMasterState extends State<TableMaster> {
+class _CustomerMasterState extends State<CustomerMaster> {
   final FirebaseService firebaseService = FirebaseService();
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _tableNumberController = TextEditingController();
-  final TextEditingController _tableSizeController = TextEditingController();
-  bool _isTableAvailable = true;
+  final TextEditingController _customerNameController = TextEditingController();
+  final TextEditingController _mobileNumberController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
   bool _isSubmitting = false;
   bool _isEditing = false;
   bool _isLoading = false;
 
-  TableMasterData? _tableMasterData;
+  CustomerMasterData? _customerMasterData;
 
   @override
   void initState() {
     super.initState();
-    if (widget.tableNumber != null) {
-      _fetchTableData(widget.tableNumber!);
+    if (widget.customerName != null) {
+      _fetchCustomerData(widget.customerName!);
       _isEditing = !widget.isDisplayMode;
     }
   }
 
-  Future<void> _fetchTableData(int tableNumber) async {
+  Future<void> _fetchCustomerData(String customerName) async {
     setState(() => _isLoading = true);
     try {
-      final data = await firebaseService.getTableByTableNumber(tableNumber);
+      final data = await firebaseService.getCustomerByCustomerName(
+        customerName,
+      );
       if (data != null) {
         setState(() {
-          _tableMasterData = data;
-          _tableNumberController.text = data.tableNumber.toString();
-          _tableSizeController.text = data.tableCapacity.toString();
-          _isTableAvailable = data.tableAvailability;
+          _customerMasterData = data;
+          _customerNameController.text = data.customerName;
+          _mobileNumberController.text = data.mobileNumber;
+          _emailController.text = data.email;
         });
       } else {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('Table not found')));
+          ).showSnackBar(const SnackBar(content: Text('Customer not found')));
         }
       }
     } catch (e) {
@@ -69,46 +75,48 @@ class _TableMasterState extends State<TableMaster> {
 
     setState(() => _isSubmitting = true);
     try {
-      final tableData = TableMasterData(
-        tableNumber: int.parse(_tableNumberController.text),
-        tableCapacity: int.parse(_tableSizeController.text),
-        tableAvailability: _isTableAvailable,
-        createdAt: _tableMasterData?.createdAt ?? Timestamp.now(),
+      final customerData = CustomerMasterData(
+        customerName: _customerNameController.text,
+        mobileNumber: _mobileNumberController.text,
+        email: _emailController.text,
+        createdAt: _customerMasterData?.createdAt ?? Timestamp.now(),
       );
 
       bool success;
-      if (_isEditing && _tableMasterData != null) {
-        success = await firebaseService.updateTableMasterDataByTableNumber(
-          _tableMasterData!.tableNumber,
-          tableData,
+      if (_isEditing && _customerMasterData != null) {
+        success = await firebaseService.updateCustomerMasterDataByCustomerName(
+          _customerMasterData!.customerName,
+          customerData,
         );
       } else {
-        final existing = await firebaseService.getTableByTableNumber(
-          tableData.tableNumber,
+        final existing = await firebaseService.getCustomerByCustomerName(
+          customerData.customerName,
         );
         if (existing != null) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Table number already exists'),
+                content: Text('Customer name already exists'),
                 backgroundColor: Colors.red,
               ),
             );
           }
           return;
         }
-        success = await firebaseService.addTableMasterData(tableData);
+        success = await firebaseService.addCustomerMasterData(customerData);
       }
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isEditing ? 'Table updated!' : 'Table created!'),
+            content: Text(
+              _isEditing ? 'Customer updated!' : 'Customer created!',
+            ),
             backgroundColor: Colors.green,
           ),
         );
         if (!_isEditing) _resetForm();
-        if (_isEditing) context.go('/cda_page', extra: 'table');
+        if (_isEditing) context.go('/cda_page', extra: 'customer');
       }
     } catch (e) {
       if (mounted) {
@@ -122,11 +130,10 @@ class _TableMasterState extends State<TableMaster> {
   }
 
   void _resetForm() {
-    _tableNumberController.clear();
-    _tableSizeController.clear();
+    _customerNameController.clear();
+    _mobileNumberController.clear();
     setState(() {
-      _isTableAvailable = true;
-      _tableMasterData = null;
+      _customerMasterData = null;
       _isEditing = false;
     });
     _formKey.currentState?.reset();
@@ -138,8 +145,8 @@ class _TableMasterState extends State<TableMaster> {
 
   @override
   void dispose() {
-    _tableNumberController.dispose();
-    _tableSizeController.dispose();
+    _customerNameController.dispose();
+    _mobileNumberController.dispose();
     super.dispose();
   }
 
@@ -147,12 +154,12 @@ class _TableMasterState extends State<TableMaster> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Table Master'),
+        title: const Text('Customer Master'),
         centerTitle: true,
         backgroundColor: Colors.blue.shade800,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/cda_page', extra: 'table'),
+          onPressed: () => context.go('/cda_page', extra: 'customer'),
         ),
         actions: widget.isDisplayMode
             ? [
@@ -174,10 +181,10 @@ class _TableMasterState extends State<TableMaster> {
                     const SizedBox(height: 20),
                     Text(
                       _isEditing
-                          ? 'Edit Table'
+                          ? 'Edit Customer'
                           : widget.isDisplayMode
-                          ? 'Table Details'
-                          : 'Add New Table',
+                          ? 'Customer Details'
+                          : 'Add New Customer',
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -186,63 +193,59 @@ class _TableMasterState extends State<TableMaster> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Table Number Field
+                    // Customer Name Field
                     TextFormField(
-                      controller: _tableNumberController,
+                      controller: _customerNameController,
                       decoration: InputDecoration(
-                        labelText: 'Table Number',
+                        labelText: 'Customer Name',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        prefixIcon: const Icon(Icons.table_restaurant),
+                        prefixIcon: const Icon(Icons.person),
                       ),
                       readOnly: widget.isDisplayMode && !_isEditing,
                       validator: (value) {
-                        if (value == null || value.isEmpty) return 'Required';
-                        if (int.tryParse(value) == null) {
-                          return 'Invalid number';
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter customer name';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 20),
 
-                    // Table Size Field
+                    // Mobile Number Field
                     TextFormField(
-                      controller: _tableSizeController,
+                      controller: _mobileNumberController,
                       decoration: InputDecoration(
-                        labelText: 'Table Size (Capacity)',
+                        labelText: 'Mobile Number',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        prefixIcon: const Icon(Icons.people),
-                        suffixText: 'persons',
+                        prefixIcon: const Icon(Icons.phone),
                       ),
                       keyboardType: TextInputType.number,
                       readOnly: widget.isDisplayMode && !_isEditing,
                       validator: (value) {
-                        if (value == null || value.isEmpty) return 'Required';
-                        if (int.tryParse(value) == null) {
-                          return 'Invalid number';
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter mobile number';
                         }
-                        if (int.parse(value) <= 0) return 'Must be > 0';
+                        if (!RegExp(r'^\d{10}$').hasMatch(value)) {
+                          return 'Please enter a valid 10-digit mobile number';
+                        }
                         return null;
                       },
                     ),
                     const SizedBox(height: 20),
 
-                    // Table Availability Switch
-                    SwitchListTile(
-                      title: const Text('Table Available'),
-                      subtitle: const Text('Toggle if ready for seating'),
-                      value: _isTableAvailable,
-                      onChanged: widget.isDisplayMode && !_isEditing
-                          ? null
-                          : (value) =>
-                                setState(() => _isTableAvailable = value),
-                      secondary: Icon(
-                        _isTableAvailable ? Icons.check_circle : Icons.block,
-                        color: _isTableAvailable ? Colors.green : Colors.red,
+                    // Email Field
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        prefixIcon: const Icon(Icons.email),
                       ),
                     ),
                     const SizedBox(height: 30),
@@ -263,7 +266,9 @@ class _TableMasterState extends State<TableMaster> {
                                 color: Colors.white,
                               )
                             : Text(
-                                _isEditing ? 'Update Table' : 'Save Table',
+                                _isEditing
+                                    ? 'Update Customer'
+                                    : 'Save Customer',
                                 style: const TextStyle(
                                   fontSize: 18,
                                   color: Colors.white,
