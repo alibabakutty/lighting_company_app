@@ -42,7 +42,6 @@ final _router = GoRouter(
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     if (authProvider.isLoading) {
-      debugPrint('Returning null (still loading)');
       return null;
     }
 
@@ -54,17 +53,19 @@ final _router = GoRouter(
 
     // If not logged in and trying to access protected route
     if (!isLoggedIn && !isLoginRoute && state.matchedLocation != '/') {
-      debugPrint('Redirecting to / (not logged in)');
       return '/';
     }
 
     // If logged in and trying to access login page
     if (isLoggedIn && isLoginRoute) {
-      final target = isAdmin ? '/admin_dashboard' : '/order_master';
-      debugPrint('Redirecting to $target (already logged in)');
-      return target;
+      return isAdmin ? '/admin_dashboard' : '/order_master';
     }
-    debugPrint('No redirect needed');
+
+    // Check order master access
+    if (state.matchedLocation == '/order_master' &&
+        !authProvider.canAccessOrderMaster) {
+      return '/admin_dashboard';
+    }
     return null;
   },
   routes: [

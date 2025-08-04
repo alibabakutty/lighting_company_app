@@ -177,40 +177,33 @@ class _SupplierLoginState extends State<SupplierLogin> {
                 ),
                 if (_showCredentialsHistory) ...[
                   const SizedBox(height: 10),
-                  ..._credentialsHistory.reversed
-                      .map(
-                        (credential) => Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: const Icon(Icons.account_circle),
-                            title: Text(credential['email'] ?? ''),
-                            subtitle: Text('••••••••'),
-                            onTap: () => _useCredential(credential),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () async {
-                                final prefs =
-                                    await SharedPreferences.getInstance();
-                                final updatedHistory = _credentialsHistory
-                                    .where(
-                                      (c) => c['email'] != credential['email'],
-                                    )
-                                    .toList();
-                                await prefs.setStringList(
-                                  'supplier_credentials_history',
-                                  updatedHistory
-                                      .map(
-                                        (c) => '${c['email']}|${c['password']}',
-                                      )
-                                      .toList(),
-                                );
-                                _loadCredentialsHistory();
-                              },
-                            ),
-                          ),
+                  ..._credentialsHistory.reversed.map(
+                    (credential) => Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: const Icon(Icons.account_circle),
+                        title: Text(credential['email'] ?? ''),
+                        subtitle: Text('••••••••'),
+                        onTap: () => _useCredential(credential),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            final updatedHistory = _credentialsHistory
+                                .where((c) => c['email'] != credential['email'])
+                                .toList();
+                            await prefs.setStringList(
+                              'supplier_credentials_history',
+                              updatedHistory
+                                  .map((c) => '${c['email']}|${c['password']}')
+                                  .toList(),
+                            );
+                            _loadCredentialsHistory();
+                          },
                         ),
-                      )
-                      ,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 10),
                 ],
                 const SizedBox(height: 10),

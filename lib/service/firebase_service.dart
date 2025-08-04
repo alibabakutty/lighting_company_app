@@ -61,23 +61,15 @@ class FirebaseService {
     required String orderNumber,
     required double totalQty,
     required double totalAmount,
-    required int maleCount,
-    required int femaleCount,
-    required int kidsCount,
-    required String supplierName, // 👈 New parameter
+    required String userName, // 👈 New parameter
   }) async {
     try {
-      int guestCount = maleCount + femaleCount + kidsCount;
 
       DocumentReference orderRef = await _db.collection('orders').add({
         'order_number': orderNumber,
-        'supplier_name': supplierName, // 👈 Save to Firestore
+        'username': userName, // 👈 Save to Firestore
         'total_quantity': totalQty,
         'total_amount': totalAmount,
-        'guest_count': guestCount,
-        'male_count': maleCount,
-        'female_count': femaleCount,
-        'kids_count': kidsCount,
         'timestamp': FieldValue.serverTimestamp(),
       });
 

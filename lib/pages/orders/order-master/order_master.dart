@@ -18,15 +18,12 @@ class OrderMaster extends StatefulWidget {
 }
 
 class _OrderMasterState extends State<OrderMaster> {
-  String? supplierUsername;
-  bool isLoading = true;
+  AuthUser? _currentUser;
+  bool _isLoading = true;
   List<OrderItem> orderItems = [OrderItemExtension.empty()];
 
   final _formKey = GlobalKey<FormState>();
   final _quantityController = TextEditingController();
-  final _maleController = TextEditingController();
-  final _femaleController = TextEditingController();
-  final _kidsController = TextEditingController();
 
   final FirebaseService _firebaseService = FirebaseService();
   List<ItemMasterData> _allItems = [];
@@ -60,7 +57,7 @@ class _OrderMasterState extends State<OrderMaster> {
   void initState() {
     super.initState();
     _loadOrderCounter();
-    _fetchSupplierData();
+    _fetchUserData();
     _loadAllItems();
   }
 
@@ -128,29 +125,21 @@ class _OrderMasterState extends State<OrderMaster> {
     }
   }
 
-  Future<void> _fetchSupplierData() async {
+  Future<void> _fetchUserData() async {
     try {
-      final authUser = await widget.authService.getCurrentAuthUser();
-      if (authUser.role != UserRole.supplier) {
-        if (mounted) context.go('/supplier_login');
-        return;
-      }
+      final user = await widget.authService.getCurrentAuthUser();
+      if (!mounted) return;
 
       setState(() {
-        supplierUsername = authUser.supplierName ?? 'Supplier';
-        isLoading = false;
+        _currentUser = user;
+        _isLoading = false;
       });
     } catch (e) {
-      setState(() => isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        context.go('/supplier_login');
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      context.go('/');
     }
   }
 
@@ -215,21 +204,15 @@ class _OrderMasterState extends State<OrderMaster> {
           totalAmount += item.quantity * item.itemRateAmount;
         }
 
-        // Safely parse guest count fields
-        final int maleCount = int.tryParse(_maleController.text.trim()) ?? 0;
-        final int femaleCount =
-            int.tryParse(_femaleController.text.trim()) ?? 0;
-        final int kidsCount = int.tryParse(_kidsController.text.trim()) ?? 0;
-
         final success = await FirebaseService().addOrderMasterData(
           orderItems: validOrderItems, // Use the filtered list
           orderNumber: _currentOrderNumber,
           totalQty: totalQty,
           totalAmount: totalAmount,
-          maleCount: maleCount,
-          femaleCount: femaleCount,
-          kidsCount: kidsCount,
-          supplierName: supplierUsername!,
+          userName:
+              _currentUser?.supplierName ??
+              _currentUser?.username ??
+              'Unknown User',
         );
 
         if (success) {
@@ -247,9 +230,6 @@ class _OrderMasterState extends State<OrderMaster> {
           setState(() {
             orderItems = [OrderItemExtension.empty()];
             _quantityController.clear();
-            _maleController.clear();
-            _femaleController.clear();
-            _kidsController.clear();
           });
         } else {
           // ignore: use_build_context_synchronously
@@ -286,7 +266,7 @@ class _OrderMasterState extends State<OrderMaster> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
+    if (_isLoading) {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(
@@ -299,26 +279,10 @@ class _OrderMasterState extends State<OrderMaster> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'ORDER MANAGEMENT',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              getDisplayName(supplierUsername ?? 'SUPPLIER').toUpperCase(),
-              style: TextStyle(
-                fontSize: 14,
-                // ignore: deprecated_member_use
-                color: Colors.white.withOpacity(0.9),
-              ),
-            ),
-          ],
+        title: Text(
+          _currentUser?.isAdmin ?? false
+              ? 'Admin Order Management'
+              : 'Supplier Order Management',
         ),
         backgroundColor: Colors.deepPurple[700],
         elevation: 4,
@@ -327,10 +291,15 @@ class _OrderMasterState extends State<OrderMaster> {
           onPressed: () => context.go('/'),
         ),
         actions: [
+          if (_currentUser?.isAdmin ?? false)
+            IconButton(
+              icon: const Icon(Icons.dashboard, color: Colors.white),
+              onPressed: () => context.go('/admin_dashboard'),
+              tooltip: 'Back to Dashboard',
+            ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: _logout,
-            tooltip: 'Logout',
           ),
         ],
         bottom: PreferredSize(
@@ -572,9 +541,6 @@ class _OrderMasterState extends State<OrderMaster> {
   @override
   void dispose() {
     _quantityController.dispose();
-    _maleController.dispose();
-    _femaleController.dispose();
-    _kidsController.dispose();
     super.dispose();
   }
 }

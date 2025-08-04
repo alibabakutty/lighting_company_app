@@ -28,25 +28,39 @@ class _AuthRedirectState extends State<AuthRedirect> {
     final authProvider = Provider.of<AuthProvider>(context);
 
     if (authProvider.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+          ),
+        ),
+      );
     }
 
     if (!authProvider.isAuthenticated) {
       return const WelcomePage();
     }
 
+    // Handle navigation based on the current route
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+
+    // If admin is trying to access order master directly, allow it
+    if (currentRoute == '/order_master' && authProvider.isAdmin) {
+      return OrderMaster(
+        authService: Provider.of<AuthService>(context, listen: false),
+      );
+    }
+
+    // Default routing
     if (authProvider.isAdmin) {
       return AdminDashboard(
         authService: Provider.of<AuthService>(context, listen: false),
       );
     }
 
-    if (authProvider.isSupplier) {
-      return OrderMaster(
-        authService: Provider.of<AuthService>(context, listen: false),
-      );
-    }
-
-    return const WelcomePage();
+    // For suppliers
+    return OrderMaster(
+      authService: Provider.of<AuthService>(context, listen: false),
+    );
   }
 }

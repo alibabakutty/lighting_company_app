@@ -48,6 +48,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _currentUser != null;
   bool get isAdmin => _currentUser?.isAdmin ?? false;
   bool get isSupplier => _currentUser?.isSupplier ?? false;
+  bool get canAccessOrderMaster => isAdmin || isSupplier;
 
   Future<void> _restoreSession(String uid) async {
     try {
