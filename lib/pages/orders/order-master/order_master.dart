@@ -279,10 +279,28 @@ class _OrderMasterState extends State<OrderMaster> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(
-          _currentUser?.isAdmin ?? false
-              ? 'Admin Order Management'
-              : 'Supplier Order Management',
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _currentUser?.isAdmin ?? false
+                  ? 'Admin Order Management'
+                  : 'Supplier Order Management',
+              style: TextStyle(fontSize: 18),
+            ),
+            if (_currentUser != null)
+              Text(
+                _currentUser?.supplierName?.toUpperCase() ??
+                    _currentUser?.username?.toUpperCase() ??
+                    '',
+                style: TextStyle(
+                  fontSize: 14,
+                  // ignore: deprecated_member_use
+                  color: Colors.white.withOpacity(0.8),
+                ),
+              ),
+          ],
         ),
         backgroundColor: Colors.deepPurple[700],
         elevation: 4,

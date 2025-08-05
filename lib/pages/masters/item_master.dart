@@ -225,25 +225,22 @@ class _ItemMasterState extends State<ItemMaster> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 6.0,
+              ),
               child: Form(
                 key: _formKey,
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
                       // Item Code Field
-                      TextFormField(
+                      _buildCompactFormField(
                         controller: _itemCodeController,
-                        decoration: InputDecoration(
-                          labelText: 'Item Code',
-                          prefixIcon: const Icon(Icons.tag),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                        readOnly: widget.isDisplayMode || _isEditing,
+                        label: 'Item Code',
+                        icon: Icons.tag,
+                        isReadOnly: widget.isDisplayMode || _isEditing,
+                        fieldWidth: 0.25,
                         validator: (value) {
                           if (value == null || value.isEmpty) return 'Required';
                           if (int.tryParse(value) == null) {
@@ -252,67 +249,40 @@ class _ItemMasterState extends State<ItemMaster> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
 
                       // Item Name Field
-                      TextFormField(
+                      _buildCompactFormField(
                         controller: _itemNameController,
-                        decoration: InputDecoration(
-                          labelText: 'Item Name',
-                          prefixIcon: const Icon(Icons.inventory),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                        readOnly: widget.isDisplayMode,
+                        label: 'Item Name',
+                        icon: Icons.inventory,
+                        isReadOnly: widget.isDisplayMode,
                         validator: (value) {
                           if (value == null || value.isEmpty) return 'Required';
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
 
                       // UOM Field
-                      TextFormField(
+                      _buildCompactFormField(
                         controller: _uomController,
-                        decoration: InputDecoration(
-                          labelText: 'Unit of Measurement (UOM)',
-                          hintText: 'Nos',
-                          prefixIcon: const Icon(Icons.straighten),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                        readOnly: widget.isDisplayMode,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            _uomController.text = 'Nos';
-                          }
-                          return null;
-                        },
+                        label: 'Unit of Measurement',
+                        hint: 'Nos',
+                        icon: Icons.straighten,
+                        isReadOnly: widget.isDisplayMode,
+                        fieldWidth: 0.25,
                       ),
-                      const SizedBox(height: 16),
 
                       // Amount Field
-                      TextFormField(
+                      _buildCompactFormField(
                         controller: _itemRateAmountController,
+                        label: 'Amount (₹)',
+                        icon: Icons.currency_rupee,
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        decoration: InputDecoration(
-                          labelText: 'Amount (₹)',
-                          prefixIcon: const Icon(Icons.currency_rupee),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                        readOnly: widget.isDisplayMode,
+                        isReadOnly: widget.isDisplayMode,
+                        textAlign: TextAlign.right,
+                        fieldWidth: 0.25,
                         validator: (value) {
                           if (value == null || value.isEmpty) return 'Required';
                           if (double.tryParse(value) == null) {
@@ -321,149 +291,114 @@ class _ItemMasterState extends State<ItemMaster> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
 
                       // GST Rate Field
-                      TextFormField(
+                      _buildCompactFormField(
                         controller: _gstRateController,
+                        label: 'GST Rate (%)',
+                        icon: Icons.percent,
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        decoration: InputDecoration(
-                          labelText: 'GST Rate (%)',
-                          prefixIcon: const Icon(Icons.percent),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                        readOnly: widget.isDisplayMode,
+                        isReadOnly: widget.isDisplayMode,
+                        textAlign: TextAlign.right,
+                        fieldWidth: 0.25,
                         validator: (value) {
                           if (value == null || value.isEmpty) return 'Required';
-                          if (double.tryParse(value) == null)
+                          if (double.tryParse(value) == null) {
                             return 'Invalid number';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // GST Amount Field
-                      TextFormField(
-                        controller: _gstAmountController,
-                        keyboardType: TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'GST Amount (₹)',
-                          prefixIcon: const Icon(Icons.currency_rupee),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                        readOnly: widget.isDisplayMode,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return 'Required';
-                          if (double.tryParse(value) == null)
-                            return 'Invalid amount';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Total Amount Field
-                      TextFormField(
-                        controller: _totalAmountController,
-                        keyboardType: TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Total Amount (₹)',
-                          prefixIcon: const Icon(Icons.currency_rupee),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                        readOnly: widget.isDisplayMode,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return 'Required';
-                          if (double.tryParse(value) == null)
-                            return 'Invalid amount';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // MRP Amount Field
-                      TextFormField(
-                        controller: _mrpAmountController,
-                        keyboardType: TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'MRP Amount (₹)',
-                          prefixIcon: const Icon(Icons.currency_rupee),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                        readOnly: widget.isDisplayMode,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return 'Required';
-                          if (double.tryParse(value) == null)
-                            return 'Invalid amount';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Status Dropdown
-                      DropdownButtonFormField<String>(
-                        value: _selectedStatus,
-                        items: ['Active', 'Inactive'].map((status) {
-                          return DropdownMenuItem<String>(
-                            value: status,
-                            child: Text(status),
-                          );
-                        }).toList(),
-                        onChanged: widget.isDisplayMode
-                            ? null
-                            : (value) =>
-                                  setState(() => _selectedStatus = value),
-                        decoration: InputDecoration(
-                          labelText: 'Status',
-                          prefixIcon: const Icon(Icons.toggle_on),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                        validator: (value) {
-                          if (!widget.isDisplayMode &&
-                              (value == null || value.isEmpty)) {
-                            return 'Please select status';
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
 
-                      if (!widget.isDisplayMode)
+                      // GST Amount Field
+                      _buildCompactFormField(
+                        controller: _gstAmountController,
+                        label: 'GST Amount (₹)',
+                        icon: Icons.currency_rupee,
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        isReadOnly: widget.isDisplayMode,
+                        textAlign: TextAlign.right,
+                        fieldWidth: 0.25,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Required';
+                          if (double.tryParse(value) == null) {
+                            return 'Invalid amount';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      // Total Amount Field
+                      _buildCompactFormField(
+                        controller: _totalAmountController,
+                        label: 'Total Amount (₹)',
+                        icon: Icons.currency_rupee,
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        isReadOnly: widget.isDisplayMode,
+                        textAlign: TextAlign.right,
+                        fieldWidth: 0.25,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Required';
+                          if (double.tryParse(value) == null) {
+                            return 'Invalid amount';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      // MRP Amount Field
+                      _buildCompactFormField(
+                        controller: _mrpAmountController,
+                        label: 'MRP Amount (₹)',
+                        icon: Icons.currency_rupee,
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        isReadOnly: widget.isDisplayMode,
+                        textAlign: TextAlign.right,
+                        fieldWidth: 0.25,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Required';
+                          if (double.tryParse(value) == null) {
+                            return 'Invalid amount';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      // Status Dropdown
+                      _buildCompactDropdown(
+                        value: _selectedStatus,
+                        items: ['Active', 'Inactive'],
+                        label: 'Status',
+                        isReadOnly: widget.isDisplayMode,
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedStatus = value;
+                              // ignore: avoid_print
+                              print('Status changed to: $value'); // Debug print
+                            });
+                          }
+                        },
+                      ),
+
+                      if (!widget.isDisplayMode) ...[
+                        const SizedBox(height: 16),
                         SizedBox(
                           width: double.infinity,
-                          height: 50,
+                          height: 48,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue.shade700,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                             onPressed: _isSubmitting ? null : _submitForm,
@@ -472,16 +407,160 @@ class _ItemMasterState extends State<ItemMaster> {
                                     color: Colors.white,
                                   )
                                 : const Text(
-                                    'Save Item',
-                                    style: TextStyle(fontSize: 18),
+                                    'SAVE ITEM',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
                                   ),
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildCompactFormField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? hint,
+    bool isReadOnly = false,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    TextAlign textAlign = TextAlign.left,
+    double fieldWidth = 0.5, // 50% width for label and input
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          // Label container (50% width)
+          Container(
+            width: MediaQuery.of(context).size.width * 0.4,
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade900,
+              ),
+            ),
+          ),
+          // Input field container (50% width)
+          Container(
+            width: MediaQuery.of(context).size.width * fieldWidth,
+            child: TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              readOnly: isReadOnly,
+              textAlign: textAlign,
+              style: const TextStyle(fontSize: 15, height: 1.1),
+              decoration: InputDecoration(
+                hintText: hint,
+                isDense: true,
+                contentPadding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
+                // ignore: unnecessary_null_comparison
+                prefixIcon: icon != null ? Icon(icon, size: 18) : null,
+                prefixIconConstraints: const BoxConstraints(minWidth: 32),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade400,
+                    width: 0.8,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade400,
+                    width: 0.8,
+                  ),
+                ),
+                filled: true,
+                fillColor: isReadOnly ? Colors.grey.shade50 : Colors.white,
+              ),
+              validator: validator,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactDropdown({
+    required String? value,
+    required List<String> items,
+    required String label,
+    required bool isReadOnly,
+    required void Function(String?) onChanged,
+    double fieldWidth = 0.25, // 50% width for label and dropdown
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          // Label container (50% width)
+          Container(
+            width: MediaQuery.of(context).size.width * 0.4,
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade900,
+              ),
+            ),
+          ),
+          // Dropdown container (50% width)
+          Container(
+            width: MediaQuery.of(context).size.width * fieldWidth,
+            child: DropdownButtonFormField<String>(
+              value: value,
+              items: items.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value, style: const TextStyle(fontSize: 14)),
+                );
+              }).toList(),
+              onChanged: isReadOnly ? null : onChanged,
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 14,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade400,
+                    width: 0.8,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade400,
+                    width: 0.8,
+                  ),
+                ),
+                filled: true,
+                fillColor: isReadOnly ? Colors.grey.shade50 : Colors.white,
+              ),
+              hint: const Text('Select'),
+              disabledHint: Text(value ?? ''),
+              isExpanded: true,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

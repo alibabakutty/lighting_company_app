@@ -111,7 +111,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 6.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -124,12 +127,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 10),
                   const Text(
                     'Manage your hotel arrangements',
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 5),
                   // Item Master Card
                   _buildMasterCard(
                     context,
@@ -239,30 +241,42 @@ class _AdminDashboardState extends State<AdminDashboard> {
     required VoidCallback onTap,
   }) {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2, // Reduced elevation for subtle shadow
+      margin: const EdgeInsets.symmetric(
+        vertical: 4,
+      ), // Tighter vertical spacing
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8), // Slightly smaller radius
+        side: BorderSide(
+          color: Colors.grey.shade200, // Add subtle border
+          width: 0.5,
+        ),
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         // ignore: deprecated_member_use
-        splashColor: color.withOpacity(0.2),
+        splashColor: color.withOpacity(0.1), // More subtle splash effect
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(12.0), // Reduced padding
           child: Row(
             children: [
-              // Icon Container
+              // Icon Container - made more compact
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8), // Reduced padding
                 decoration: BoxDecoration(
                   // ignore: deprecated_member_use
-                  color: color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  color: color.withOpacity(0.1), // More subtle background
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(icon, size: 30, color: color),
+                child: Icon(
+                  icon,
+                  size: 24, // Smaller icon
+                  color: color,
+                ),
               ),
-              const SizedBox(width: 16),
-
-              // Text Content
+              const SizedBox(width: 12), // Reduced spacing
+              // Text Content - more compact layout
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,24 +284,33 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 16, // Slightly smaller
+                        fontWeight:
+                            FontWeight.w600, // Semi-bold instead of bold
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2), // Reduced spacing
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13, // Smaller
                         color: Colors.grey.shade600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
 
-              // Chevron Icon
-              Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+              // Chevron Icon - made smaller
+              Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.grey.shade400,
+                size: 20,
+              ),
             ],
           ),
         ),

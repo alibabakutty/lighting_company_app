@@ -149,7 +149,7 @@ class _SupplierLoginState extends State<SupplierLogin> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Supplier Portal',
+                    'Executive Portal',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -219,7 +219,7 @@ class _SupplierLoginState extends State<SupplierLogin> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        labelText: 'Supplier ID',
+                        labelText: 'Executive ID',
                         labelStyle: TextStyle(fontSize: 16),
                         prefixIcon: const Icon(Icons.email_outlined),
                         border: OutlineInputBorder(

@@ -25,6 +25,7 @@ class WelcomePage extends StatelessWidget {
             ),
           ),
           // Dark overlay for better text visibility
+          // ignore: deprecated_member_use
           Container(color: Colors.black.withOpacity(0.4)),
           // Content
           LayoutBuilder(
@@ -48,6 +49,7 @@ class WelcomePage extends StatelessWidget {
                                     end: Alignment.bottomCenter,
                                     colors: [
                                       Colors.transparent,
+                                      // ignore: deprecated_member_use
                                       Colors.black.withOpacity(0.7),
                                     ],
                                   ),
@@ -86,6 +88,7 @@ class WelcomePage extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
+                                        // ignore: deprecated_member_use
                                         color: Colors.black.withOpacity(0.3),
                                         blurRadius: 6,
                                         offset: const Offset(0, 3),
@@ -113,9 +116,11 @@ class WelcomePage extends StatelessWidget {
                             minHeight: constraints.maxHeight * 0.4,
                           ),
                           decoration: BoxDecoration(
+                            // ignore: deprecated_member_use
                             color: Colors.white.withOpacity(0.5),
                             boxShadow: [
                               BoxShadow(
+                                // ignore: deprecated_member_use
                                 color: Colors.grey.withOpacity(0.1),
                                 spreadRadius: 5,
                                 blurRadius: 20,
@@ -156,7 +161,9 @@ class WelcomePage extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(12),
                                     gradient: LinearGradient(
                                       colors: [
+                                        // ignore: deprecated_member_use
                                         Colors.red.shade700.withOpacity(0.9),
+                                        // ignore: deprecated_member_use
                                         Colors.red.shade500.withOpacity(0.9),
                                       ],
                                       begin: Alignment.topLeft,
@@ -164,6 +171,7 @@ class WelcomePage extends StatelessWidget {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
+                                        // ignore: deprecated_member_use
                                         color: Colors.red.shade300.withOpacity(
                                           0.5,
                                         ),
@@ -201,7 +209,9 @@ class WelcomePage extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(12),
                                     gradient: LinearGradient(
                                       colors: [
+                                        // ignore: deprecated_member_use
                                         Colors.blue.shade700.withOpacity(0.9),
+                                        // ignore: deprecated_member_use
                                         Colors.blue.shade500.withOpacity(0.9),
                                       ],
                                       begin: Alignment.topLeft,
@@ -209,6 +219,7 @@ class WelcomePage extends StatelessWidget {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
+                                        // ignore: deprecated_member_use
                                         color: Colors.blue.shade300.withOpacity(
                                           0.5,
                                         ),
@@ -224,7 +235,7 @@ class WelcomePage extends StatelessWidget {
                                     },
                                     child: Center(
                                       child: Text(
-                                        'SUPPLIER LOGIN',
+                                        'EXECUTIVE LOGIN',
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 18,

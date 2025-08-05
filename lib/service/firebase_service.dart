@@ -64,7 +64,6 @@ class FirebaseService {
     required String userName, // 👈 New parameter
   }) async {
     try {
-
       DocumentReference orderRef = await _db.collection('orders').add({
         'order_number': orderNumber,
         'username': userName, // 👈 Save to Firestore
