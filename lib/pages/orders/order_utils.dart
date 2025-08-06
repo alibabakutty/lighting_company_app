@@ -1,4 +1,3 @@
-
 import 'package:lighting_company_app/models/order_item_data.dart';
 
 extension StringExtension on String {

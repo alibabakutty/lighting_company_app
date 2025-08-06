@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lighting_company_app/authentication/auth_models.dart';
 import 'package:lighting_company_app/authentication/auth_service.dart';
+import 'package:lighting_company_app/models/customer_master_data.dart';
 import 'package:lighting_company_app/models/item_master_data.dart';
 import 'package:lighting_company_app/models/order_item_data.dart';
-import 'package:lighting_company_app/pages/orders/order-master/order_item_row.dart';
-import 'package:lighting_company_app/pages/orders/order-master/order_utils.dart';
+import 'package:lighting_company_app/pages/orders/order_item_row.dart';
+import 'package:lighting_company_app/pages/orders/order_utils.dart';
 import 'package:lighting_company_app/service/firebase_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,6 +27,7 @@ class _OrderMasterState extends State<OrderMaster> {
   final _quantityController = TextEditingController();
 
   final FirebaseService _firebaseService = FirebaseService();
+  List<CustomerMasterData> _allCustomers = [];
   List<ItemMasterData> _allItems = [];
   bool _isLoadingItems = false;
 
@@ -58,6 +60,7 @@ class _OrderMasterState extends State<OrderMaster> {
     super.initState();
     _loadOrderCounter();
     _fetchUserData();
+    _loadAllCustomers();
     _loadAllItems();
   }
 
@@ -140,6 +143,30 @@ class _OrderMasterState extends State<OrderMaster> {
         context,
       ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       context.go('/');
+    }
+  }
+
+  Future<void> _loadAllCustomers() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final customers = await _firebaseService.getAllCustomers();
+      setState(() {
+        _allCustomers = customers;
+      });
+    } catch (e) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error to load customers: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -383,16 +410,21 @@ class _OrderMasterState extends State<OrderMaster> {
                                 const SizedBox(width: 2),
                                 SizedBox(
                                   width: 87,
-                                  child: Text('ITEM NAME', style: headerStyle),
+                                  child: Text('CUSTOMER', style: headerStyle),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 2),
+                                SizedBox(
+                                  width: 47,
+                                  child: Text('ITEM', style: headerStyle),
+                                ),
+                                const SizedBox(width: 2),
                                 SizedBox(
                                   width: 40,
                                   child: Text('QTY', style: headerStyle),
                                 ),
                                 const SizedBox(width: 8),
                                 SizedBox(
-                                  width: 60,
+                                  width: 50,
                                   child: Text('RATE', style: headerStyle),
                                 ),
                                 const SizedBox(width: 8),
@@ -421,7 +453,9 @@ class _OrderMasterState extends State<OrderMaster> {
                                     OrderItemRow(
                                       index: i,
                                       item: orderItems[i],
+                                      allCustomers: _allCustomers,
                                       allItems: _allItems,
+                                      isLoadingCustomers: _isLoading,
                                       isLoadingItems: _isLoadingItems,
                                       onRemove: (index) => setState(
                                         () => orderItems.removeAt(index),
@@ -453,6 +487,7 @@ class _OrderMasterState extends State<OrderMaster> {
                                           );
                                         }
                                       }),
+                                      onCustomerSelected: () {},
                                       onAddNewRow: _addNewRow,
                                     ),
                                 ],

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lighting_company_app/authentication/auth_provider.dart';
 import 'package:lighting_company_app/authentication/auth_service.dart';
 import 'package:lighting_company_app/pages/admin_dashboard.dart';
-import 'package:lighting_company_app/pages/orders/order-master/order_master.dart';
+import 'package:lighting_company_app/pages/orders/order_master.dart';
 import 'package:lighting_company_app/pages/welcome_page.dart';
 import 'package:provider/provider.dart';
 

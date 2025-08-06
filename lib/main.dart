@@ -16,7 +16,7 @@ import 'package:lighting_company_app/pages/masters/customer_master.dart';
 import 'package:lighting_company_app/pages/masters/item_master.dart';
 import 'package:lighting_company_app/pages/masters/supplier_master.dart';
 import 'package:lighting_company_app/pages/order_history.dart';
-import 'package:lighting_company_app/pages/orders/order-master/order_master.dart';
+import 'package:lighting_company_app/pages/orders/order_master.dart';
 import 'package:provider/provider.dart';
 
 void main() async {

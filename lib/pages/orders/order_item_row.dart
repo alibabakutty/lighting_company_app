@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lighting_company_app/models/customer_master_data.dart';
 import 'package:lighting_company_app/models/item_master_data.dart';
 import 'package:lighting_company_app/models/order_item_data.dart';
 
 class OrderItemRow extends StatefulWidget {
   final int index;
   final OrderItem item;
+  final List<CustomerMasterData> allCustomers;
   final List<ItemMasterData> allItems;
+  final bool isLoadingCustomers;
   final bool isLoadingItems;
   final Function(int) onRemove;
   final Function(int, OrderItem) onUpdate;
+  final VoidCallback onCustomerSelected;
   final VoidCallback onItemSelected;
   final VoidCallback onAddNewRow;
 
@@ -17,10 +21,13 @@ class OrderItemRow extends StatefulWidget {
     super.key,
     required this.index,
     required this.item,
+    required this.allCustomers,
     required this.allItems,
+    required this.isLoadingCustomers,
     required this.isLoadingItems,
     required this.onRemove,
     required this.onUpdate,
+    required this.onCustomerSelected,
     required this.onItemSelected,
     required this.onAddNewRow,
   });
@@ -30,17 +37,25 @@ class OrderItemRow extends StatefulWidget {
 }
 
 class _OrderItemRowState extends State<OrderItemRow> {
-  late FocusNode _searchFocusNode;
-  late TextEditingController _quantityController;
-  late TextEditingController _netAmountController;
+  late FocusNode _itemSearchFocusNode;
+  late FocusNode _customerSearchFocusNode;
+  late TextEditingController _customerNameController;
   late TextEditingController _itemNameController;
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _customerSearchController =
+      TextEditingController();
+  final TextEditingController _itemSearchController = TextEditingController();
+  late TextEditingController _quantityController;
   late TextEditingController _uomController;
+  late TextEditingController _netAmountController;
 
   @override
   void initState() {
     super.initState();
-    _searchFocusNode = FocusNode();
+    _itemSearchFocusNode = FocusNode();
+    _customerSearchFocusNode = FocusNode();
+    _customerNameController = TextEditingController(
+      text: widget.item.customerName,
+    );
     _quantityController = TextEditingController(
       text: widget.item.quantity % 1 == 0
           ? widget.item.quantity.toInt().toString()
@@ -55,6 +70,17 @@ class _OrderItemRowState extends State<OrderItemRow> {
 
     _quantityController.addListener(_updateAmount);
     _itemNameController.addListener(_handleNameChange);
+  }
+
+  void _handleCustomerChange(CustomerMasterData selectedCustomer) {
+    final newCustomer = widget.item.copyWith(
+      customerName: selectedCustomer.customerName,
+    );
+
+    _customerNameController.text = selectedCustomer.customerName;
+    widget.onUpdate(widget.index, newCustomer);
+    widget.onCustomerSelected();
+    _customerSearchController.clear();
   }
 
   void _handleNameChange() {
@@ -81,10 +107,11 @@ class _OrderItemRowState extends State<OrderItemRow> {
     super.didUpdateWidget(oldWidget);
     if (widget.item != oldWidget.item) {
       if (widget.item.itemCode.isEmpty) {
-        _searchController.clear();
+        _itemSearchController.clear();
       } else {
         _itemNameController.text = widget.item.itemName;
       }
+      _customerNameController.text = widget.item.customerName;
       _quantityController.text = widget.item.quantity % 1 == 0
           ? widget.item.quantity.toInt().toString()
           : widget.item.quantity.toStringAsFixed(2);
@@ -102,9 +129,10 @@ class _OrderItemRowState extends State<OrderItemRow> {
     _quantityController.dispose();
     _uomController.dispose();
     _netAmountController.dispose();
+    _customerNameController.dispose();
     _itemNameController.dispose();
-    _searchController.dispose();
-    _searchFocusNode.dispose();
+    _itemSearchController.dispose();
+    _itemSearchFocusNode.dispose();
     super.dispose();
   }
 
@@ -137,7 +165,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
 
     widget.onUpdate(widget.index, newItem);
     widget.onItemSelected();
-    _searchController.clear();
+    _itemSearchController.clear();
   }
 
   @override
@@ -149,7 +177,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
           padding: const EdgeInsets.symmetric(vertical: 2.0),
           width:
               MediaQuery.of(context).size.width * 0.99, // 90% of screen width
-
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -168,9 +195,39 @@ class _OrderItemRowState extends State<OrderItemRow> {
                 ),
               ),
 
+              // Customer Name
+              SizedBox(
+                width: 130,
+                height: 32,
+                child: widget.item.customerName.isEmpty
+                    ? _buildCustomerSearchField()
+                    : TextFormField(
+                        controller: _customerNameController,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 8,
+                          ),
+                          isDense: true,
+                        ),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        onChanged: (value) {
+                          widget.onUpdate(
+                            widget.index,
+                            widget.item.copyWith(customerName: value),
+                          );
+                        },
+                      ),
+              ),
+              const SizedBox(width: 3),
+
               // Product Name
               SizedBox(
-                width: 280,
+                width: 146,
                 height: 32,
                 child: widget.item.itemCode.isEmpty
                     ? _buildItemSearchField()
@@ -339,10 +396,77 @@ class _OrderItemRowState extends State<OrderItemRow> {
     );
   }
 
+  Widget _buildCustomerSearchField() {
+    return RawAutocomplete<CustomerMasterData>(
+      focusNode: _customerSearchFocusNode,
+      textEditingController: _customerSearchController,
+      optionsBuilder: (TextEditingValue textEditingValue) {
+        if (widget.isLoadingCustomers) return const Iterable.empty();
+
+        return widget.allCustomers.where((customer) {
+          if (textEditingValue.text.isEmpty) return true;
+          final searchTerm = textEditingValue.text.toLowerCase();
+          return customer.customerName.toLowerCase().contains(searchTerm) ||
+              customer.mobileNumber.toLowerCase().contains(searchTerm);
+        });
+      },
+      onSelected: _handleCustomerChange,
+      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+        return TextFormField(
+          controller: controller,
+          focusNode: focusNode,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'Search customer...',
+            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            isDense: true,
+          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        );
+      },
+      optionsViewBuilder: (context, onSelected, options) {
+        return Material(
+          elevation: 4.0,
+          child: SizedBox(
+            height: 180,
+            child: widget.isLoadingCustomers
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final customer = options.elementAt(index);
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade800),
+                          ),
+                        ),
+                        child: ListTile(
+                          dense: true,
+                          visualDensity: const VisualDensity(vertical: -4),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 8.0,
+                          ),
+                          title: Text(
+                            '${customer.customerName} - ${customer.mobileNumber}',
+                            style: const TextStyle(fontSize: 13, height: 1.1),
+                          ),
+                          onTap: () => onSelected(customer),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildItemSearchField() {
     return RawAutocomplete<ItemMasterData>(
-      focusNode: _searchFocusNode,
-      textEditingController: _searchController,
+      focusNode: _itemSearchFocusNode,
+      textEditingController: _itemSearchController,
       optionsBuilder: (TextEditingValue textEditingValue) {
         if (widget.isLoadingItems) return const Iterable.empty();
 
