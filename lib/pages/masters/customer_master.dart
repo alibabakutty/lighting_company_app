@@ -29,6 +29,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
   bool _isLoading = false;
 
   CustomerMasterData? _customerMasterData;
+  String? customerNameFromArgs;
 
   @override
   void initState() {
@@ -84,6 +85,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
 
       bool success;
       if (_isEditing && _customerMasterData != null) {
+        // update existing customer
         success = await firebaseService.updateCustomerMasterDataByCustomerName(
           _customerMasterData!.customerName,
           customerData,
@@ -95,8 +97,10 @@ class _CustomerMasterState extends State<CustomerMaster> {
         if (existing != null) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Customer name already exists'),
+              SnackBar(
+                content: Text(
+                  'Customer name ${customerData.customerName} already exists',
+                ),
                 backgroundColor: Colors.red,
               ),
             );
@@ -110,9 +114,11 @@ class _CustomerMasterState extends State<CustomerMaster> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              _isEditing ? 'Customer updated!' : 'Customer created!',
+              success
+                  ? (_isEditing ? 'Customer updated!' : 'Customer created!')
+                  : 'Failed to save customer',
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: success ? Colors.green : Colors.red,
           ),
         );
         if (!_isEditing) _resetForm();
@@ -120,9 +126,12 @@ class _CustomerMasterState extends State<CustomerMaster> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
       setState(() => _isSubmitting = false);
@@ -132,6 +141,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
   void _resetForm() {
     _customerNameController.clear();
     _mobileNumberController.clear();
+    _emailController.clear();
     setState(() {
       _customerMasterData = null;
       _isEditing = false;
@@ -147,6 +157,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
   void dispose() {
     _customerNameController.dispose();
     _mobileNumberController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -154,7 +165,13 @@ class _CustomerMasterState extends State<CustomerMaster> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Customer Master'),
+        title: Text(
+          widget.isDisplayMode
+              ? 'CUSTOMER DETAILS: ${widget.customerName ?? ''}'
+              : _isEditing
+              ? 'EDIT CUSTOMER: ${widget.customerName ?? ''}'
+              : 'CREATE NEW CUSTOMER',
+        ),
         centerTitle: true,
         backgroundColor: Colors.blue.shade800,
         leading: IconButton(
@@ -173,112 +190,164 @@ class _CustomerMasterState extends State<CustomerMaster> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 6.0,
+              ),
               child: Form(
                 key: _formKey,
-                child: ListView(
-                  children: [
-                    const SizedBox(height: 20),
-                    Text(
-                      _isEditing
-                          ? 'Edit Customer'
-                          : widget.isDisplayMode
-                          ? 'Customer Details'
-                          : 'Add New Customer',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Customer Name Field
+                      _buildCompactFormField(
+                        controller: _customerNameController,
+                        label: 'Customer Name',
+                        icon: Icons.person,
+                        isReadOnly: widget.isDisplayMode,
+                        fieldWidth: 0.53,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter customer name';
+                          }
+                          return null;
+                        },
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 30),
 
-                    // Customer Name Field
-                    TextFormField(
-                      controller: _customerNameController,
-                      decoration: InputDecoration(
-                        labelText: 'Customer Name',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: const Icon(Icons.person),
+                      // Mobile Number Field
+                      _buildCompactFormField(
+                        controller: _mobileNumberController,
+                        label: 'Mobile Number',
+                        icon: Icons.phone,
+                        keyboardType: TextInputType.phone,
+                        isReadOnly: widget.isDisplayMode,
+                        fieldWidth: 0.53,
                       ),
-                      readOnly: widget.isDisplayMode && !_isEditing,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter customer name';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
 
-                    // Mobile Number Field
-                    TextFormField(
-                      controller: _mobileNumberController,
-                      decoration: InputDecoration(
-                        labelText: 'Mobile Number',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: const Icon(Icons.phone),
+                      // Email Field
+                      _buildCompactFormField(
+                        controller: _emailController,
+                        label: 'Email',
+                        icon: Icons.email,
+                        keyboardType: TextInputType.emailAddress,
+                        isReadOnly: widget.isDisplayMode,
+                        fieldWidth: 0.53,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter email';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
                       ),
-                      keyboardType: TextInputType.number,
-                      readOnly: widget.isDisplayMode && !_isEditing,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter mobile number';
-                        }
-                        if (!RegExp(r'^\d{10}$').hasMatch(value)) {
-                          return 'Please enter a valid 10-digit mobile number';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
 
-                    // Email Field
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: const Icon(Icons.email),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-
-                    // Action Buttons
-                    if (!widget.isDisplayMode || _isEditing)
-                      ElevatedButton(
-                        onPressed: _isSubmitting ? null : _submitForm,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade700,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      // Action Buttons
+                      if (!widget.isDisplayMode) ...[
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade700,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: _isSubmitting ? null : _submitForm,
+                            child: _isSubmitting
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                : Text(
+                                    _isEditing
+                                        ? 'UPDATE CUSTOMER'
+                                        : 'SAVE CUSTOMER',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ),
-                        child: _isSubmitting
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : Text(
-                                _isEditing
-                                    ? 'Update Customer'
-                                    : 'Save Customer',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                ),
-                              ),
-                      ),
-                  ],
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildCompactFormField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? hint,
+    bool isReadOnly = false,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    TextAlign textAlign = TextAlign.left,
+    double fieldWidth = 0.53, // 53% width for input
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          // Label container (50% width)
+          Container(
+            width: MediaQuery.of(context).size.width * 0.4,
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade900,
+              ),
+            ),
+          ),
+          // Input field container (50% width)
+          SizedBox(
+            width: MediaQuery.of(context).size.width * fieldWidth,
+            child: TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              readOnly: isReadOnly,
+              textAlign: textAlign,
+              style: const TextStyle(fontSize: 15, height: 1.1),
+              decoration: InputDecoration(
+                hintText: hint,
+                isDense: true,
+                contentPadding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
+                // ignore: unnecessary_null_comparison
+                prefixIcon: icon != null ? Icon(icon, size: 18) : null,
+                prefixIconConstraints: const BoxConstraints(minWidth: 32),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade400,
+                    width: 0.8,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade400,
+                    width: 0.8,
+                  ),
+                ),
+                filled: true,
+                fillColor: isReadOnly ? Colors.grey.shade200 : Colors.white,
+              ),
+              validator: validator,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

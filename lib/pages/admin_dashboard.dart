@@ -120,7 +120,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 children: [
                   // Header
                   const Text(
-                    'Hotel Order Management',
+                    'Light Order Management',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -128,7 +128,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ),
                   ),
                   const Text(
-                    'Manage your hotel arrangements',
+                    'Control your Light Order Management',
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                   const SizedBox(height: 5),

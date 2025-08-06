@@ -203,11 +203,13 @@ class _ItemMasterState extends State<ItemMaster> {
       appBar: AppBar(
         title: Text(
           widget.isDisplayMode
-              ? 'Item Details: ${itemNameFromArgs ?? ''}'
+              ? 'ITEM DETAILS: ${itemNameFromArgs ?? ''}'
               : _isEditing
-              ? 'Edit Item: ${itemNameFromArgs ?? ''}'
-              : 'Create New Item',
+              ? 'EDIT ITEM: ${itemNameFromArgs ?? ''}'
+              : 'CREATE NEW ITEM',
         ),
+        centerTitle: true,
+        backgroundColor: Colors.blue.shade800,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/cda_page', extra: 'item'),
@@ -239,7 +241,7 @@ class _ItemMasterState extends State<ItemMaster> {
                         controller: _itemCodeController,
                         label: 'Item Code',
                         icon: Icons.tag,
-                        isReadOnly: widget.isDisplayMode || _isEditing,
+                        isReadOnly: widget.isDisplayMode,
                         fieldWidth: 0.25,
                         validator: (value) {
                           if (value == null || value.isEmpty) return 'Required';
@@ -275,7 +277,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       // Amount Field
                       _buildCompactFormField(
                         controller: _itemRateAmountController,
-                        label: 'Amount (₹)',
+                        label: 'Amount',
                         icon: Icons.currency_rupee,
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: true,
@@ -295,7 +297,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       // GST Rate Field
                       _buildCompactFormField(
                         controller: _gstRateController,
-                        label: 'GST Rate (%)',
+                        label: 'GST Rate',
                         icon: Icons.percent,
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: true,
@@ -315,7 +317,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       // GST Amount Field
                       _buildCompactFormField(
                         controller: _gstAmountController,
-                        label: 'GST Amount (₹)',
+                        label: 'GST Amount',
                         icon: Icons.currency_rupee,
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: true,
@@ -335,7 +337,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       // Total Amount Field
                       _buildCompactFormField(
                         controller: _totalAmountController,
-                        label: 'Total Amount (₹)',
+                        label: 'Total Amount',
                         icon: Icons.currency_rupee,
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: true,
@@ -355,7 +357,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       // MRP Amount Field
                       _buildCompactFormField(
                         controller: _mrpAmountController,
-                        label: 'MRP Amount (₹)',
+                        label: 'MRP Amount',
                         icon: Icons.currency_rupee,
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: true,
@@ -406,8 +408,8 @@ class _ItemMasterState extends State<ItemMaster> {
                                 ? const CircularProgressIndicator(
                                     color: Colors.white,
                                   )
-                                : const Text(
-                                    'SAVE ITEM',
+                                : Text(
+                                    _isEditing ? 'UPDATE ITEM' : 'SAVE ITEM',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -434,7 +436,7 @@ class _ItemMasterState extends State<ItemMaster> {
     TextInputType? keyboardType,
     String? Function(String?)? validator,
     TextAlign textAlign = TextAlign.left,
-    double fieldWidth = 0.5, // 50% width for label and input
+    double fieldWidth = 0.53, // 53% width for input
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
@@ -447,14 +449,14 @@ class _ItemMasterState extends State<ItemMaster> {
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 15,
                 fontWeight: FontWeight.w500,
                 color: Colors.grey.shade900,
               ),
             ),
           ),
           // Input field container (50% width)
-          Container(
+          SizedBox(
             width: MediaQuery.of(context).size.width * fieldWidth,
             child: TextFormField(
               controller: controller,
@@ -520,7 +522,7 @@ class _ItemMasterState extends State<ItemMaster> {
             ),
           ),
           // Dropdown container (50% width)
-          Container(
+          SizedBox(
             width: MediaQuery.of(context).size.width * fieldWidth,
             child: DropdownButtonFormField<String>(
               value: value,

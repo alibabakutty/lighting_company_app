@@ -27,7 +27,6 @@ class _SupplierMasterState extends State<SupplierMaster> {
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _userIdController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _obscurePassword = true;
 
   bool _isSubmitting = false;
   bool _isEditing = false;
@@ -78,14 +77,14 @@ class _SupplierMasterState extends State<SupplierMaster> {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('Supplier not found')));
+          ).showSnackBar(const SnackBar(content: Text('Executive not found')));
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error loading supplier: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error loading executive: $e')));
       }
     } finally {
       setState(() {
@@ -126,8 +125,10 @@ class _SupplierMasterState extends State<SupplierMaster> {
           if (existingSupplier != null) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Supplier with mobile number already exists.'),
+                SnackBar(
+                  content: Text(
+                    'Executive ${supplierData.supplierName} with ${supplierData.mobileNumber} already exists.',
+                  ),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -142,8 +143,10 @@ class _SupplierMasterState extends State<SupplierMaster> {
           if (existingSupplierByName != null) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Supplier with this name already exists.'),
+                SnackBar(
+                  content: Text(
+                    'Executive ${supplierData.supplierName} already exists.',
+                  ),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -170,7 +173,7 @@ class _SupplierMasterState extends State<SupplierMaster> {
             SnackBar(
               content: Text(
                 success
-                    ? (_isEditing ? 'Supplier updated!' : 'Supplier created!')
+                    ? (_isEditing ? 'Executive updated!' : 'Executive created!')
                     : 'Operation failed!',
               ),
               backgroundColor: success ? Colors.green : Colors.red,
@@ -187,7 +190,7 @@ class _SupplierMasterState extends State<SupplierMaster> {
             _formKey.currentState?.reset();
 
             if (_isEditing) {
-              context.go('/cda_page', extra: 'supplier');
+              context.go('/cda_page', extra: 'executive');
             }
           }
         }
@@ -263,215 +266,205 @@ class _SupplierMasterState extends State<SupplierMaster> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 6.0,
+              ),
               child: Form(
                 key: _formKey,
-                child: ListView(
-                  children: [
-                    const SizedBox(height: 20),
-                    const Text(
-                      'EXECUTIVE REGISTRATION',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Executive Name Field
+                      _buildCompactFormField(
+                        controller: _nameController,
+                        label: 'Executive Name',
+                        icon: Icons.business,
+                        hint: 'Enter executive name',
+                        isReadOnly: widget.isDisplayMode && !_isEditing,
+                        fieldWidth: 0.53, // 53% of width for input
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter executive name';
+                          }
+                          return null;
+                        },
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 30),
 
-                    // Executive Name Field
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: 'Executive Name',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: const Icon(Icons.business),
+                      // Mobile Number Field
+                      _buildCompactFormField(
+                        controller: _mobileController,
+                        label: 'Mobile Number',
+                        icon: Icons.phone,
+                        hint: 'Enter mobile number',
+                        keyboardType: TextInputType.phone,
+                        isReadOnly: widget.isDisplayMode && !_isEditing,
+                        fieldWidth: 0.53, // 53% of width for input
+                        textAlign: TextAlign.left,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter mobile number';
+                          }
+                          if (!RegExp(r'^[0-9]{10,}$').hasMatch(value)) {
+                            return 'Please enter a valid 10-digit mobile number';
+                          }
+                          return null;
+                        },
                       ),
-                      readOnly: widget.isDisplayMode && !_isEditing,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter supplier name';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
 
-                    // Mobile Number Field
-                    TextFormField(
-                      controller: _mobileController,
-                      decoration: InputDecoration(
-                        labelText: 'Mobile Number',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: const Icon(Icons.phone),
+                      // User ID Field
+                      _buildCompactFormField(
+                        controller: _userIdController,
+                        label: 'Email',
+                        icon: Icons.email,
+                        hint: 'Enter email address',
+                        keyboardType: TextInputType.emailAddress,
+                        isReadOnly: widget.isDisplayMode && !_isEditing,
+                        fieldWidth: 0.53, // 53% of width for input
+                        textAlign: TextAlign.left,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter an email';
+                          }
+                          if (!RegExp(
+                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          ).hasMatch(value)) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
                       ),
-                      keyboardType: TextInputType.phone,
-                      readOnly: widget.isDisplayMode && !_isEditing,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter mobile number';
-                        }
-                        if (!RegExp(r'^[0-9]{10,}$').hasMatch(value)) {
-                          return 'Please enter a valid 10-digit mobile number';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
 
-                    // User ID Field
-                    TextFormField(
-                      controller: _userIdController,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: const Icon(Icons.email),
-                        hintText: 'Enter email address',
+                      // Password Field
+                      _buildCompactFormField(
+                        controller: _passwordController,
+                        label: 'Password',
+                        icon: Icons.lock,
+                        hint: 'Enter password',
+                        keyboardType: TextInputType.visiblePassword,
+                        isReadOnly: widget.isDisplayMode && !_isEditing,
+                        textAlign: TextAlign.left,
+                        fieldWidth: 0.53, // 53% of width for input
+                        obscureText: true,
+                        validator: (value) {
+                          if (!widget.isDisplayMode &&
+                              (value == null || value.isEmpty)) {
+                            return 'Please enter a password';
+                          }
+                          if (!widget.isDisplayMode && value!.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
+                          return null;
+                        },
                       ),
-                      readOnly: widget.isDisplayMode && !_isEditing,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter an email';
-                        }
-                        if (!RegExp(
-                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                        ).hasMatch(value)) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
 
-                    // Password Field
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: const Icon(Icons.lock),
-                        suffixIcon: widget.isDisplayMode && !_isEditing
-                            ? null
-                            : IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                              ),
-                      ),
-                      readOnly: widget.isDisplayMode && !_isEditing,
-                      validator: (value) {
-                        if (!widget.isDisplayMode &&
-                            (value == null || value.isEmpty)) {
-                          return 'Please enter a password';
-                        }
-                        if (!widget.isDisplayMode && value!.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 30),
-
-                    if (!widget.isDisplayMode)
-                      ElevatedButton(
-                        onPressed: _isSubmitting ? null : _submitForm,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: _isSubmitting
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : const Text(
-                                'Register Executive',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                      ),
-                    if (widget.isDisplayMode && _isEditing)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isEditing = false;
-                                  // Reset to original values
-                                  if (_supplierMasterData != null) {
-                                    _nameController.text =
-                                        _supplierMasterData!.supplierName;
-                                    _mobileController.text =
-                                        _supplierMasterData!.mobileNumber;
-                                    _userIdController.text =
-                                        _supplierMasterData!.email;
-                                    _passwordController.text =
-                                        _supplierMasterData!.password;
-                                  }
-                                });
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.grey,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 15,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: const Text(
-                                'Cancel',
-                                style: TextStyle(fontSize: 18),
+                      if (!widget.isDisplayMode) ...[
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade700,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _isSubmitting ? null : _submitForm,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 15,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: _isSubmitting
-                                  ? const CircularProgressIndicator(
+                            onPressed: _isSubmitting ? null : _submitForm,
+                            child: _isSubmitting
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                : Text(
+                                    _isEditing
+                                        ? 'UPDATE EXECUTIVE'
+                                        : 'SAVE EXECUTIVE',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
                                       color: Colors.white,
-                                    )
-                                  : const Text(
-                                      'Save',
-                                      style: TextStyle(fontSize: 18),
                                     ),
-                            ),
+                                  ),
                           ),
-                        ],
-                      ),
-                  ],
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildCompactFormField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? hint,
+    bool isReadOnly = false,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    TextAlign textAlign = TextAlign.left,
+    double fieldWidth = 0.53, // 53% of width for input
+    bool obscureText = false,
+  }) {
+    bool showPassword = !obscureText; // Local state to control visibility
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          // Label container (50% width)
+          Container(
+            width: MediaQuery.of(context).size.width * 0.4,
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade900,
+              ),
+            ),
+          ),
+          // Input field container (50% width)
+          SizedBox(
+            width: MediaQuery.of(context).size.width * fieldWidth,
+            child: TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              readOnly: isReadOnly,
+              textAlign: textAlign,
+              obscureText: obscureText && !showPassword,
+              style: const TextStyle(fontSize: 15, height: 1.1),
+              decoration: InputDecoration(
+                hintText: hint,
+                isDense: true,
+                contentPadding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
+                // ignore: unnecessary_null_comparison
+                prefixIcon: icon != null ? Icon(icon, size: 18) : null,
+                prefixIconConstraints: const BoxConstraints(minWidth: 32),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade400,
+                    width: 0.8,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade400,
+                    width: 0.8,
+                  ),
+                ),
+                filled: true,
+                fillColor: isReadOnly ? Colors.grey.shade50 : Colors.white,
+              ),
+              validator: validator,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
