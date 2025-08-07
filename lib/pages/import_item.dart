@@ -1,4 +1,4 @@
-// import 'dart:io';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:decimal/decimal.dart';
 import 'package:file_picker/file_picker.dart';
@@ -80,7 +80,6 @@ class _ImportItemState extends State<ImportItem> {
       final table = decoder.tables.values.first;
 
       if (table.rows.length <= 1) {
-        // 1 because header row is included
         setState(() {
           _isLoading = false;
           _statusMessage = 'No data found in Excel sheet (only header row)';
@@ -92,7 +91,6 @@ class _ImportItemState extends State<ImportItem> {
       final batch = _firestore.batch();
       final collectionRef = _firestore.collection('item_master_data');
 
-      // Process each row (skip header row)
       for (int i = 1; i < table.rows.length; i++) {
         try {
           final row = table.rows[i];
@@ -110,12 +108,16 @@ class _ImportItemState extends State<ImportItem> {
           final itemName = _parseString(row[1]);
           final uom = _parseString(row[2]).isNotEmpty
               ? _parseString(row[2])
-              : 'NOS';
+              : 'Nos';
           final itemRateAmount = Decimal.parse(_parseDouble(row[3]).toString());
-          final itemStatus = _parseBool(row[4]) ?? false;
+          final gstRate = row.length > 4 ? _parseDouble(row[4]) : 0.0;
+          final gstAmount = row.length > 5 ? _parseDouble(row[5]) : 0.0;
+          final totalAmount = row.length > 6 ? _parseDouble(row[6]) : 0.0;
+          final mrpAmount = row.length > 7 ? _parseDouble(row[7]) : 0.0;
+          final itemStatus = _parseBool(row.length > 8 ? row[8] : true) ?? true;
 
-          final timestamp = row.length > 5 && row[5] != null
-              ? _parseTimestamp(row[5].toString())
+          final timestamp = row.length > 9 && row[9] != null
+              ? _parseTimestamp(row[9].toString())
               : Timestamp.now();
 
           final item = ItemMasterData(
@@ -123,15 +125,17 @@ class _ImportItemState extends State<ImportItem> {
             itemName: itemName,
             uom: uom,
             itemRateAmount: itemRateAmount.toDouble(),
+            gstRate: gstRate,
+            gstAmount: gstAmount,
+            totalAmount: totalAmount,
+            mrpAmount: mrpAmount,
             itemStatus: itemStatus,
             timestamp: timestamp,
           );
 
-          // Use itemCode as document ID to prevent duplicates
           batch.set(collectionRef.doc(itemCode.toString()), item.toFirestore());
           _successCount++;
 
-          // Update UI periodically
           if (i % 10 == 0 || i == table.rows.length - 1) {
             setState(() {
               _statusMessage = 'Processing row $i/${table.rows.length - 1}...';
@@ -169,7 +173,6 @@ Total: ${table.rows.length - 1}''';
 
   Timestamp _parseTimestamp(String dateString) {
     try {
-      // Try common date formats
       final formats = [
         DateFormat('dd/MM/yyyy'),
         DateFormat('MM/dd/yyyy'),
@@ -182,8 +185,6 @@ Total: ${table.rows.length - 1}''';
           return Timestamp.fromDate(format.parse(dateString));
         } catch (_) {}
       }
-
-      // If none of the formats work, use current time
       return Timestamp.now();
     } catch (_) {
       return Timestamp.now();
@@ -259,9 +260,13 @@ Total: ${table.rows.length - 1}''';
                         children: [
                           Text('• Item Code (required, must be unique)'),
                           Text('• Item Name (required)'),
-                          Text('• UOM (required, default to "NOS")'),
+                          Text('• UOM (required, default to "Nos")'),
                           Text('• Item Rate Amount (required)'),
-                          Text('• Item Status (true/false)'),
+                          Text('• GST Rate (optional, default 0.0)'),
+                          Text('• GST Amount (optional, default 0.0)'),
+                          Text('• Total Amount (optional, default 0.0)'),
+                          Text('• MRP Amount (optional, default 0.0)'),
+                          Text('• Item Status (optional, default true)'),
                           Text('• Timestamp (optional)'),
                         ],
                       ),
@@ -341,17 +346,40 @@ class ItemMasterData {
   final String itemName;
   final String uom;
   final double itemRateAmount;
+  final double gstRate;
+  final double gstAmount;
+  final double totalAmount;
+  final double mrpAmount;
   final bool itemStatus;
   final Timestamp timestamp;
 
   ItemMasterData({
     required this.itemCode,
     required this.itemName,
-    this.uom = 'NOS',
+    this.uom = 'Nos',
     required this.itemRateAmount,
+    this.gstRate = 0.0,
+    this.gstAmount = 0.0,
+    this.totalAmount = 0.0,
+    this.mrpAmount = 0.0,
     required this.itemStatus,
     required this.timestamp,
   });
+
+  factory ItemMasterData.fromFirestore(Map<String, dynamic> data) {
+    return ItemMasterData(
+      itemCode: data['item_code'] ?? 0,
+      itemName: data['item_name'] ?? '',
+      uom: data['uom'] ?? 'Nos',
+      itemRateAmount: data['item_rate_amount'] ?? 0.0,
+      gstRate: data['gst_rate'] ?? 0.0,
+      gstAmount: data['gst_amount'] ?? 0.0,
+      totalAmount: data['total_amount'] ?? 0.0,
+      mrpAmount: data['mrp_amount'] ?? 0.0,
+      itemStatus: data['item_status'] ?? true,
+      timestamp: data['timestamp'],
+    );
+  }
 
   Map<String, dynamic> toFirestore() {
     return {
@@ -359,6 +387,10 @@ class ItemMasterData {
       'item_name': itemName,
       'uom': uom,
       'item_rate_amount': itemRateAmount,
+      'gst_rate': gstRate,
+      'gst_amount': gstAmount,
+      'total_amount': totalAmount,
+      'mrp_amount': mrpAmount,
       'item_status': itemStatus,
       'timestamp': timestamp,
     };

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lighting_company_app/models/customer_master_data.dart';
+import 'package:lighting_company_app/pages/masters/utils/compact_form_field.dart';
 import 'package:lighting_company_app/service/firebase_service.dart';
 
 class CustomerMaster extends StatefulWidget {
@@ -173,7 +174,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
               : 'CREATE NEW CUSTOMER',
         ),
         centerTitle: true,
-        backgroundColor: Colors.blue.shade800,
+        backgroundColor: Color(0xFF1565C0), // Royal Blue
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/cda_page', extra: 'customer'),
@@ -200,7 +201,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
                   child: Column(
                     children: [
                       // Customer Name Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _customerNameController,
                         label: 'Customer Name',
                         icon: Icons.person,
@@ -215,7 +216,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
                       ),
 
                       // Mobile Number Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _mobileNumberController,
                         label: 'Mobile Number',
                         icon: Icons.phone,
@@ -225,7 +226,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
                       ),
 
                       // Email Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _emailController,
                         label: 'Email',
                         icon: Icons.email,
@@ -251,7 +252,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
                           height: 48,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade700,
+                              backgroundColor: Color(0xFF1565C0), // Royal Blue
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -279,75 +280,6 @@ class _CustomerMasterState extends State<CustomerMaster> {
                 ),
               ),
             ),
-    );
-  }
-
-  Widget _buildCompactFormField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    String? hint,
-    bool isReadOnly = false,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-    TextAlign textAlign = TextAlign.left,
-    double fieldWidth = 0.53, // 53% width for input
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        children: [
-          // Label container (50% width)
-          Container(
-            width: MediaQuery.of(context).size.width * 0.4,
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey.shade900,
-              ),
-            ),
-          ),
-          // Input field container (50% width)
-          SizedBox(
-            width: MediaQuery.of(context).size.width * fieldWidth,
-            child: TextFormField(
-              controller: controller,
-              keyboardType: keyboardType,
-              readOnly: isReadOnly,
-              textAlign: textAlign,
-              style: const TextStyle(fontSize: 15, height: 1.1),
-              decoration: InputDecoration(
-                hintText: hint,
-                isDense: true,
-                contentPadding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
-                // ignore: unnecessary_null_comparison
-                prefixIcon: icon != null ? Icon(icon, size: 18) : null,
-                prefixIconConstraints: const BoxConstraints(minWidth: 32),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(
-                    color: Colors.grey.shade400,
-                    width: 0.8,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(
-                    color: Colors.grey.shade400,
-                    width: 0.8,
-                  ),
-                ),
-                filled: true,
-                fillColor: isReadOnly ? Colors.grey.shade200 : Colors.white,
-              ),
-              validator: validator,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

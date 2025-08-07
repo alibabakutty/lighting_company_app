@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lighting_company_app/models/item_master_data.dart';
+import 'package:lighting_company_app/pages/masters/utils/compact_dropdown.dart';
+import 'package:lighting_company_app/pages/masters/utils/compact_form_field.dart';
 import 'package:lighting_company_app/service/firebase_service.dart';
 
 class ItemMaster extends StatefulWidget {
@@ -237,7 +239,7 @@ class _ItemMasterState extends State<ItemMaster> {
                   child: Column(
                     children: [
                       // Item Code Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _itemCodeController,
                         label: 'Item Code',
                         icon: Icons.tag,
@@ -253,7 +255,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       ),
 
                       // Item Name Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _itemNameController,
                         label: 'Item Name',
                         icon: Icons.inventory,
@@ -265,7 +267,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       ),
 
                       // UOM Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _uomController,
                         label: 'Unit of Measurement',
                         hint: 'Nos',
@@ -275,7 +277,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       ),
 
                       // Amount Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _itemRateAmountController,
                         label: 'Amount',
                         icon: Icons.currency_rupee,
@@ -295,7 +297,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       ),
 
                       // GST Rate Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _gstRateController,
                         label: 'GST Rate',
                         icon: Icons.percent,
@@ -315,7 +317,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       ),
 
                       // GST Amount Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _gstAmountController,
                         label: 'GST Amount',
                         icon: Icons.currency_rupee,
@@ -335,7 +337,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       ),
 
                       // Total Amount Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _totalAmountController,
                         label: 'Total Amount',
                         icon: Icons.currency_rupee,
@@ -355,7 +357,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       ),
 
                       // MRP Amount Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _mrpAmountController,
                         label: 'MRP Amount',
                         icon: Icons.currency_rupee,
@@ -375,7 +377,7 @@ class _ItemMasterState extends State<ItemMaster> {
                       ),
 
                       // Status Dropdown
-                      _buildCompactDropdown(
+                      CompactDropdown(
                         value: _selectedStatus,
                         items: ['Active', 'Inactive'],
                         label: 'Status',
@@ -424,145 +426,6 @@ class _ItemMasterState extends State<ItemMaster> {
                 ),
               ),
             ),
-    );
-  }
-
-  Widget _buildCompactFormField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    String? hint,
-    bool isReadOnly = false,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-    TextAlign textAlign = TextAlign.left,
-    double fieldWidth = 0.53, // 53% width for input
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        children: [
-          // Label container (50% width)
-          Container(
-            width: MediaQuery.of(context).size.width * 0.4,
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey.shade900,
-              ),
-            ),
-          ),
-          // Input field container (50% width)
-          SizedBox(
-            width: MediaQuery.of(context).size.width * fieldWidth,
-            child: TextFormField(
-              controller: controller,
-              keyboardType: keyboardType,
-              readOnly: isReadOnly,
-              textAlign: textAlign,
-              style: const TextStyle(fontSize: 15, height: 1.1),
-              decoration: InputDecoration(
-                hintText: hint,
-                isDense: true,
-                contentPadding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
-                // ignore: unnecessary_null_comparison
-                prefixIcon: icon != null ? Icon(icon, size: 18) : null,
-                prefixIconConstraints: const BoxConstraints(minWidth: 32),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(
-                    color: Colors.grey.shade400,
-                    width: 0.8,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(
-                    color: Colors.grey.shade400,
-                    width: 0.8,
-                  ),
-                ),
-                filled: true,
-                fillColor: isReadOnly ? Colors.grey.shade50 : Colors.white,
-              ),
-              validator: validator,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactDropdown({
-    required String? value,
-    required List<String> items,
-    required String label,
-    required bool isReadOnly,
-    required void Function(String?) onChanged,
-    double fieldWidth = 0.25, // 50% width for label and dropdown
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        children: [
-          // Label container (50% width)
-          Container(
-            width: MediaQuery.of(context).size.width * 0.4,
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey.shade900,
-              ),
-            ),
-          ),
-          // Dropdown container (50% width)
-          SizedBox(
-            width: MediaQuery.of(context).size.width * fieldWidth,
-            child: DropdownButtonFormField<String>(
-              value: value,
-              items: items.map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value, style: const TextStyle(fontSize: 14)),
-                );
-              }).toList(),
-              onChanged: isReadOnly ? null : onChanged,
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 14,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(
-                    color: Colors.grey.shade400,
-                    width: 0.8,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(
-                    color: Colors.grey.shade400,
-                    width: 0.8,
-                  ),
-                ),
-                filled: true,
-                fillColor: isReadOnly ? Colors.grey.shade50 : Colors.white,
-              ),
-              hint: const Text('Select'),
-              disabledHint: Text(value ?? ''),
-              isExpanded: true,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

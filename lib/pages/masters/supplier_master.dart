@@ -5,6 +5,8 @@ import 'package:lighting_company_app/authentication/auth_exception.dart';
 import 'package:lighting_company_app/authentication/auth_models.dart';
 import 'package:lighting_company_app/authentication/auth_service.dart';
 import 'package:lighting_company_app/models/supplier_master_data.dart';
+import 'package:lighting_company_app/pages/masters/utils/compact_form_field.dart';
+import 'package:lighting_company_app/pages/masters/utils/password_form_field.dart';
 import 'package:lighting_company_app/service/firebase_service.dart';
 
 class SupplierMaster extends StatefulWidget {
@@ -276,7 +278,7 @@ class _SupplierMasterState extends State<SupplierMaster> {
                   child: Column(
                     children: [
                       // Executive Name Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _nameController,
                         label: 'Executive Name',
                         icon: Icons.business,
@@ -292,7 +294,7 @@ class _SupplierMasterState extends State<SupplierMaster> {
                       ),
 
                       // Mobile Number Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _mobileController,
                         label: 'Mobile Number',
                         icon: Icons.phone,
@@ -313,7 +315,7 @@ class _SupplierMasterState extends State<SupplierMaster> {
                       ),
 
                       // User ID Field
-                      _buildCompactFormField(
+                      CompactFormField(
                         controller: _userIdController,
                         label: 'Email',
                         icon: Icons.email,
@@ -336,16 +338,14 @@ class _SupplierMasterState extends State<SupplierMaster> {
                       ),
 
                       // Password Field
-                      _buildCompactFormField(
+                      PasswordFormField(
                         controller: _passwordController,
                         label: 'Password',
                         icon: Icons.lock,
                         hint: 'Enter password',
-                        keyboardType: TextInputType.visiblePassword,
                         isReadOnly: widget.isDisplayMode && !_isEditing,
-                        textAlign: TextAlign.left,
-                        fieldWidth: 0.53, // 53% of width for input
-                        obscureText: true,
+                        initialObscureText:
+                            true, // You can control this from parent
                         validator: (value) {
                           if (!widget.isDisplayMode &&
                               (value == null || value.isEmpty)) {
@@ -393,78 +393,6 @@ class _SupplierMasterState extends State<SupplierMaster> {
                 ),
               ),
             ),
-    );
-  }
-
-  Widget _buildCompactFormField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    String? hint,
-    bool isReadOnly = false,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-    TextAlign textAlign = TextAlign.left,
-    double fieldWidth = 0.53, // 53% of width for input
-    bool obscureText = false,
-  }) {
-    bool showPassword = !obscureText; // Local state to control visibility
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        children: [
-          // Label container (50% width)
-          Container(
-            width: MediaQuery.of(context).size.width * 0.4,
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade900,
-              ),
-            ),
-          ),
-          // Input field container (50% width)
-          SizedBox(
-            width: MediaQuery.of(context).size.width * fieldWidth,
-            child: TextFormField(
-              controller: controller,
-              keyboardType: keyboardType,
-              readOnly: isReadOnly,
-              textAlign: textAlign,
-              obscureText: obscureText && !showPassword,
-              style: const TextStyle(fontSize: 15, height: 1.1),
-              decoration: InputDecoration(
-                hintText: hint,
-                isDense: true,
-                contentPadding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
-                // ignore: unnecessary_null_comparison
-                prefixIcon: icon != null ? Icon(icon, size: 18) : null,
-                prefixIconConstraints: const BoxConstraints(minWidth: 32),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(
-                    color: Colors.grey.shade400,
-                    width: 0.8,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(
-                    color: Colors.grey.shade400,
-                    width: 0.8,
-                  ),
-                ),
-                filled: true,
-                fillColor: isReadOnly ? Colors.grey.shade50 : Colors.white,
-              ),
-              validator: validator,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
