@@ -151,6 +151,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
 
   void _handleItemSelected(ItemMasterData selectedItem) {
     final newItem = OrderItem(
+      customerName: widget.item.customerName,
       itemCode: selectedItem.itemCode.toString(),
       itemName: selectedItem.itemName,
       itemRateAmount: selectedItem.itemRateAmount,
@@ -417,7 +418,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
           focusNode: focusNode,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
-            hintText: 'Search customer...',
+            hintText: 'SEARCH CUSTOMER...',
             contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             isDense: true,
           ),

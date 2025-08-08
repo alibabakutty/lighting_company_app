@@ -8,7 +8,7 @@ class OrderItem {
   final double itemNetAmount;
 
   OrderItem({
-    this.customerName = '', // Default to empty string if not provided
+    required this.customerName, // Default to empty string if not provided
     required this.itemCode,
     required this.itemName,
     required this.quantity,

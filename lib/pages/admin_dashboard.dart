@@ -201,7 +201,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     icon: Icons.history_outlined,
                     color: Colors.purple.shade700,
                     onTap: () {
-                      context.go('/order_history');
+                      context.go('/order_report');
                     },
                   ),
                   const SizedBox(height: 5),

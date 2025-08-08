@@ -14,6 +14,7 @@ extension StringExtension on String {
 
 extension OrderItemExtension on OrderItem {
   static OrderItem empty() => OrderItem(
+    customerName: '', // Default to empty string
     itemCode: '',
     itemName: '',
     itemRateAmount: 0.0,

@@ -15,7 +15,7 @@ import 'package:lighting_company_app/pages/login-pages/supplier_login.dart';
 import 'package:lighting_company_app/pages/masters/customer_master.dart';
 import 'package:lighting_company_app/pages/masters/item_master.dart';
 import 'package:lighting_company_app/pages/masters/supplier_master.dart';
-import 'package:lighting_company_app/pages/order_history.dart';
+import 'package:lighting_company_app/pages/order_report.dart';
 import 'package:lighting_company_app/pages/orders/order_master.dart';
 import 'package:provider/provider.dart';
 
@@ -153,8 +153,8 @@ final _router = GoRouter(
         //   builder: (context, state) => const ExportExcelOrders(),
         // ),
         GoRoute(
-          path: 'order_history',
-          builder: (context, state) => const OrderHistory(),
+          path: 'order_report',
+          builder: (context, state) => const OrderReport(),
         ),
       ],
     ),

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lighting_company_app/service/firebase_service.dart';
 
-class OrderHistory extends StatefulWidget {
-  const OrderHistory({super.key});
+class OrderReport extends StatefulWidget {
+  const OrderReport({super.key});
 
   @override
-  State<OrderHistory> createState() => _OrderHistoryState();
+  State<OrderReport> createState() => _OrderReportState();
 }
 
-class _OrderHistoryState extends State<OrderHistory> {
+class _OrderReportState extends State<OrderReport> {
   final FirebaseService _firebaseService = FirebaseService();
   final List<Map<String, dynamic>> _flattenedOrders = [];
   bool _isLoading = false;

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lighting_company_app/models/customer_master_data.dart';
 import 'package:lighting_company_app/models/item_master_data.dart';
 import 'package:lighting_company_app/models/order_item_data.dart';
@@ -61,8 +62,11 @@ class FirebaseService {
     required String orderNumber,
     required double totalQty,
     required double totalAmount,
-    required String userName, // 👈 New parameter
+    required String userName,
   }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+
     try {
       DocumentReference orderRef = await _db.collection('orders').add({
         'order_number': orderNumber,
@@ -82,11 +86,10 @@ class FirebaseService {
         // now store in firestore
         await orderRef.collection('items').add(itemData);
       }
-
       return true;
     } catch (e) {
       // ignore: avoid_print
-      print('Error adding full order data: $e');
+      print('Error adding order: $e');
       return false;
     }
   }

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lighting_company_app/authentication/auth_models.dart';
@@ -204,6 +205,14 @@ class _OrderMasterState extends State<OrderMaster> {
   }
 
   void _submitOrder() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please login first')));
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       // Filter out empty items (where itemName is empty)
       final validOrderItems = orderItems
@@ -409,12 +418,12 @@ class _OrderMasterState extends State<OrderMaster> {
                                 ),
                                 const SizedBox(width: 2),
                                 SizedBox(
-                                  width: 87,
+                                  width: 80,
                                   child: Text('CUSTOMER', style: headerStyle),
                                 ),
                                 const SizedBox(width: 2),
                                 SizedBox(
-                                  width: 47,
+                                  width: 40,
                                   child: Text('ITEM', style: headerStyle),
                                 ),
                                 const SizedBox(width: 2),
@@ -422,12 +431,12 @@ class _OrderMasterState extends State<OrderMaster> {
                                   width: 40,
                                   child: Text('QTY', style: headerStyle),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 4),
                                 SizedBox(
-                                  width: 50,
+                                  width: 40,
                                   child: Text('RATE', style: headerStyle),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 4),
                                 SizedBox(
                                   width: 90,
                                   child: Text('AMOUNT', style: headerStyle),
