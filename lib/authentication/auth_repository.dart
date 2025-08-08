@@ -24,7 +24,7 @@ class AuthRepository {
       return await _getUserFromCollection('admins', uid, UserRole.admin)
           .onError(
             (_, __) =>
-                _getUserFromCollection('suppliers', uid, UserRole.supplier),
+                _getUserFromCollection('executives', uid, UserRole.executive),
           )
           .onError(
             (_, __) => _getUserFromCollection('users', uid, UserRole.user),
@@ -45,8 +45,8 @@ class AuthRepository {
     try {
       final collection = role == UserRole.admin
           ? 'admins'
-          : role == UserRole.supplier
-          ? 'suppliers'
+          : role == UserRole.executive
+          ? 'executives'
           : 'users';
 
       await _firestore.collection(collection).doc(uid).set({
@@ -66,7 +66,7 @@ class AuthRepository {
     try {
       await Future.wait([
         _firestore.collection('admins').doc(uid).delete(),
-        _firestore.collection('suppliers').doc(uid).delete(),
+        _firestore.collection('executives').doc(uid).delete(),
         _firestore.collection('users').doc(uid).delete(),
       ]);
     } on FirebaseException catch (e) {

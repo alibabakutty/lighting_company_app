@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lighting_company_app/models/customer_master_data.dart';
 import 'package:lighting_company_app/models/item_master_data.dart';
 import 'package:lighting_company_app/models/order_item_data.dart';
-import 'package:lighting_company_app/models/supplier_master_data.dart';
+import 'package:lighting_company_app/models/executive_master_data.dart';
 
 class FirebaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -24,18 +24,18 @@ class FirebaseService {
     }
   }
 
-  // add supplier master data to firestore
-  Future<bool> addSupplierMasterData(
-    SupplierMasterData supplierMasterData,
+  // add executive master data to firestore
+  Future<bool> addExecutiveMasterData(
+    ExecutiveMasterData executiveMasterData,
   ) async {
     try {
       await _db
-          .collection('supplier_master_data')
-          .add(supplierMasterData.toFirestore());
+          .collection('executive_master_data')
+          .add(executiveMasterData.toFirestore());
       return true;
     } catch (e) {
       // ignore: avoid_print
-      print('Error adding supplier master data: $e');
+      print('Error adding executive master data: $e');
       return false;
     }
   }
@@ -61,7 +61,7 @@ class FirebaseService {
     required List<OrderItem> orderItems,
     required String orderNumber,
     required double totalQty,
-    required double totalAmount,
+    required double totalCalculationAmount,
     required String userName,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -72,7 +72,7 @@ class FirebaseService {
         'order_number': orderNumber,
         'username': userName, // 👈 Save to Firestore
         'total_quantity': totalQty,
-        'total_amount': totalAmount,
+        'total_calculation_amount': totalCalculationAmount,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -122,34 +122,34 @@ class FirebaseService {
     return null;
   }
 
-  // fetch suppliermasterdata by suppliername
-  Future<SupplierMasterData?> getSupplierBySupplierName(
-    String supplierName,
+  // fetch executivemasterdata by executivename
+  Future<ExecutiveMasterData?> getExecutiveByExecutiveName(
+    String executiveName,
   ) async {
     final snapshot = await FirebaseFirestore.instance
-        .collection('supplier_master_data')
-        .where('supplier_name', isEqualTo: supplierName)
+        .collection('executive_master_data')
+        .where('executive_name', isEqualTo: executiveName)
         .limit(1)
         .get();
 
     if (snapshot.docs.isNotEmpty) {
-      return SupplierMasterData.fromfirestore(snapshot.docs.first.data());
+      return ExecutiveMasterData.fromfirestore(snapshot.docs.first.data());
     }
     return null;
   }
 
-  // fetch suppliermasterdata by mobileNumber
-  Future<SupplierMasterData?> getSupplierByMobileNumber(
+  // fetch Executivemasterdata by mobileNumber
+  Future<ExecutiveMasterData?> getExecutiveByMobileNumber(
     String mobileNumber,
   ) async {
     final snapshot = await FirebaseFirestore.instance
-        .collection('supplier_master_data')
+        .collection('executive_master_data')
         .where('mobile_number', isEqualTo: mobileNumber)
         .limit(1)
         .get();
 
     if (snapshot.docs.isNotEmpty) {
-      return SupplierMasterData.fromfirestore(snapshot.docs.first.data());
+      return ExecutiveMasterData.fromfirestore(snapshot.docs.first.data());
     }
     return null;
   }
@@ -230,15 +230,15 @@ class FirebaseService {
     }
   }
 
-  // Fetch orders by supplier name
-  Future<List<Map<String, dynamic>>> getOrdersBySupplierName(
-    String supplierName,
+  // Fetch orders by executive name
+  Future<List<Map<String, dynamic>>> getOrdersByExecutiveName(
+    String executiveName,
   ) async {
     try {
       // Attempt server-side sorted query first
       QuerySnapshot snapshot = await _db
           .collection('orders')
-          .where('supplier_name', isEqualTo: supplierName)
+          .where('executive_name', isEqualTo: executiveName)
           .orderBy('timestamp', descending: true)
           .get(const GetOptions(source: Source.server));
 
@@ -250,10 +250,10 @@ class FirebaseService {
         // Fallback to client-side sorting if index is missing
         // ignore: avoid_print
         print('Index missing, falling back to client-side sorting');
-        return _getOrdersBySupplierWithClientSort(supplierName);
+        return _getOrdersByExecutiveWithClientSort(executiveName);
       }
       // ignore: avoid_print
-      print('Error fetching orders by supplier: $e');
+      print('Error fetching orders by executive: $e');
       return [];
     } catch (e) {
       // ignore: avoid_print
@@ -263,13 +263,13 @@ class FirebaseService {
   }
 
   /// Fallback method with client-side sorting
-  Future<List<Map<String, dynamic>>> _getOrdersBySupplierWithClientSort(
-    String supplierName,
+  Future<List<Map<String, dynamic>>> _getOrdersByExecutiveWithClientSort(
+    String executiveName,
   ) async {
     try {
       QuerySnapshot snapshot = await _db
           .collection('orders')
-          .where('supplier_name', isEqualTo: supplierName)
+          .where('executive_name', isEqualTo: executiveName)
           .get();
 
       final orders =
@@ -483,16 +483,16 @@ class FirebaseService {
     }
   }
 
-  // fetch all Suppliers
-  Future<List<SupplierMasterData>> getAllSuppliers() async {
+  // fetch all Executives
+  Future<List<ExecutiveMasterData>> getAllExecutives() async {
     try {
       QuerySnapshot snapshot = await _db
-          .collection('supplier_master_data')
+          .collection('executive_master_data')
           .get();
 
       return snapshot.docs
           .map(
-            (doc) => SupplierMasterData.fromfirestore(
+            (doc) => ExecutiveMasterData.fromfirestore(
               doc.data() as Map<String, dynamic>,
             ),
           )
@@ -662,17 +662,17 @@ class FirebaseService {
     }
   }
 
-  // update supplier master data by supplier name
-  Future<bool> updateSupplierMasterDataBySupplierName(
-    String oldSupplierName,
-    SupplierMasterData updatedData,
+  // update executive master data by executive name
+  Future<bool> updateExecutiveMasterDataByExecutiveName(
+    String oldExecutiveName,
+    ExecutiveMasterData updatedData,
   ) async {
     try {
-      // first check if the new no is already taken by another supplier
-      if (oldSupplierName != updatedData.supplierName) {
+      // first check if the new no is already taken by another executive
+      if (oldExecutiveName != updatedData.executiveName) {
         QuerySnapshot duplicateCheck = await _db
-            .collection('supplier_master_data')
-            .where('supplier_name', isEqualTo: updatedData.supplierName)
+            .collection('executive_master_data')
+            .where('executive_name', isEqualTo: updatedData.executiveName)
             .limit(1)
             .get();
 
@@ -681,17 +681,17 @@ class FirebaseService {
         }
       }
 
-      // Find the document by the old supplier name
+      // Find the document by the old executive name
       QuerySnapshot snapshot = await _db
-          .collection('supplier_master_data')
-          .where('supplier_name', isEqualTo: oldSupplierName)
+          .collection('executive_master_data')
+          .where('executive_name', isEqualTo: oldExecutiveName)
           .limit(1)
           .get();
 
       if (snapshot.docs.isNotEmpty) {
         String docId = snapshot.docs.first.id;
-        await _db.collection('supplier_master_data').doc(docId).update({
-          'supplier_name': updatedData.supplierName,
+        await _db.collection('executive_master_data').doc(docId).update({
+          'executive_name': updatedData.executiveName,
           'mobile_number': updatedData.mobileNumber,
           'email': updatedData.email,
           'password': updatedData.password,
@@ -706,16 +706,16 @@ class FirebaseService {
     }
   }
 
-  // update supplier master data by mobile number
-  Future<bool> updateSupplierMasterDataByMobileNumber(
+  // update executive master data by mobile number
+  Future<bool> updateExecutiveMasterDataByMobileNumber(
     String oldMobileNumber,
-    SupplierMasterData updatedData,
+    ExecutiveMasterData updatedData,
   ) async {
     try {
-      // first check if the new no is already taken by another supplier
+      // first check if the new no is already taken by another executive
       if (oldMobileNumber != updatedData.mobileNumber) {
         QuerySnapshot duplicateCheck = await _db
-            .collection('supplier_master_data')
+            .collection('executive_master_data')
             .where('mobile_number', isEqualTo: updatedData.mobileNumber)
             .limit(1)
             .get();
@@ -725,17 +725,17 @@ class FirebaseService {
         }
       }
 
-      // Find the document by the old supplier name
+      // Find the document by the old executive name
       QuerySnapshot snapshot = await _db
-          .collection('supplier_master_data')
+          .collection('executive_master_data')
           .where('mobile_number', isEqualTo: oldMobileNumber)
           .limit(1)
           .get();
 
       if (snapshot.docs.isNotEmpty) {
         String docId = snapshot.docs.first.id;
-        await _db.collection('supplier_master_data').doc(docId).update({
-          'supplier_name': updatedData.supplierName,
+        await _db.collection('executive_master_data').doc(docId).update({
+          'executive_name': updatedData.executiveName,
           'mobile_number': updatedData.mobileNumber,
           'email': updatedData.email,
           'password': updatedData.password,

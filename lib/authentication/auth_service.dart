@@ -118,13 +118,13 @@ class AuthService {
     expectedRole: UserRole.admin,
   );
 
-  Future<AuthUser> supplierSignIn({
+  Future<AuthUser> executiveSignIn({
     required String email,
     required String password,
   }) async => _signInWithRole(
     email: email,
     password: password,
-    expectedRole: UserRole.supplier,
+    expectedRole: UserRole.executive,
   );
 
   Future<AuthUser> _createUserWithRole(
@@ -157,7 +157,7 @@ class AuthService {
   Future<AuthUser> createAdminAccount(AdminSignUpData data) async =>
       await _createUserWithRole(data, {'username': data.username});
 
-  Future<AuthUser> createSupplierAccount(SupplierSignUpData data) async =>
+  Future<AuthUser> createExecutiveAccount(ExecutiveSignUpData data) async =>
       await _createUserWithRole(data, {
         'name': data.name,
         'mobileNumber': data.mobileNumber,

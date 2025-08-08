@@ -22,7 +22,7 @@ class AuthSession {
       'sessionToken': sessionToken,
       'isActive': isActive,
       'username': user.username,
-      'supplierName': user.supplierName,
+      'executiveName': user.executiveName,
     };
   }
 

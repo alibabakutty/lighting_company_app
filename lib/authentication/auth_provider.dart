@@ -47,8 +47,8 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _currentUser != null;
   bool get isAdmin => _currentUser?.isAdmin ?? false;
-  bool get isSupplier => _currentUser?.isSupplier ?? false;
-  bool get canAccessOrderMaster => isAdmin || isSupplier;
+  bool get isExecutive => _currentUser?.isExecutive ?? false;
+  bool get canAccessOrderMaster => isAdmin || isExecutive;
 
   Future<void> _restoreSession(String uid) async {
     try {
@@ -108,14 +108,14 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String password,
   }) => _handleAuthOperation(
-    () => _authService.supplierSignIn(email: email, password: password),
+    () => _authService.executiveSignIn(email: email, password: password),
   );
 
   Future<void> createAdminAccount(AdminSignUpData data) =>
       _handleAuthOperation(() => _authService.createAdminAccount(data));
 
-  Future<void> createSupplierAccount(SupplierSignUpData data) =>
-      _handleAuthOperation(() => _authService.createSupplierAccount(data));
+  Future<void> createSupplierAccount(ExecutiveSignUpData data) =>
+      _handleAuthOperation(() => _authService.createExecutiveAccount(data));
 
   Future<void> signOut() async {
     try {

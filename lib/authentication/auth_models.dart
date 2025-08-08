@@ -1,9 +1,9 @@
-enum UserRole { user, admin, supplier }
+enum UserRole { user, admin, executive }
 
 class AuthUser {
   final String uid;
   final String? username;
-  final String? supplierName;
+  final String? executiveName;
   final String? email;
   final String? mobileNumber;
   final UserRole role;
@@ -11,7 +11,7 @@ class AuthUser {
   AuthUser({
     required this.uid,
     this.username,
-    this.supplierName,
+    this.executiveName,
     this.email,
     this.mobileNumber,
     this.role = UserRole.user,
@@ -25,8 +25,8 @@ class AuthUser {
     return AuthUser(
       uid: uid,
       username: data['username']?.toString(),
-      supplierName:
-          data['supplierName']?.toString() ?? data['name']?.toString(),
+      executiveName:
+          data['executiveName']?.toString() ?? data['name']?.toString(),
       email: data['email']?.toString(),
       mobileNumber:
           data['mobileNumber']?.toString() ?? data['mobile_number']?.toString(),
@@ -35,7 +35,7 @@ class AuthUser {
   }
 
   bool get isAdmin => role == UserRole.admin;
-  bool get isSupplier => role == UserRole.supplier;
+  bool get isExecutive => role == UserRole.executive;
   bool get isRegularUser => role == UserRole.user;
 }
 
@@ -61,14 +61,14 @@ class AdminSignUpData extends SignUpCredentials {
   }) : super(role: UserRole.admin);
 }
 
-class SupplierSignUpData extends SignUpCredentials {
+class ExecutiveSignUpData extends SignUpCredentials {
   final String name;
   final String mobileNumber;
 
-  SupplierSignUpData({
+  ExecutiveSignUpData({
     required super.email,
     required super.password,
     required this.name,
     required this.mobileNumber,
-  }) : super(role: UserRole.supplier);
+  }) : super(role: UserRole.executive);
 }

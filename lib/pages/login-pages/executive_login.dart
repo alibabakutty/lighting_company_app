@@ -4,14 +4,14 @@ import 'package:lighting_company_app/authentication/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 
-class SupplierLogin extends StatefulWidget {
-  const SupplierLogin({super.key});
+class ExecutiveLogin extends StatefulWidget {
+  const ExecutiveLogin({super.key});
 
   @override
-  State<SupplierLogin> createState() => _SupplierLoginState();
+  State<ExecutiveLogin> createState() => _ExecutiveLoginState();
 }
 
-class _SupplierLoginState extends State<SupplierLogin> {
+class _ExecutiveLoginState extends State<ExecutiveLogin> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -37,7 +37,7 @@ class _SupplierLoginState extends State<SupplierLogin> {
 
   Future<void> _loadCredentialsHistory() async {
     final prefs = await SharedPreferences.getInstance();
-    final history = prefs.getStringList('supplier_credentials_history') ?? [];
+    final history = prefs.getStringList('executive_credentials_history') ?? [];
 
     setState(() {
       _credentialsHistory = history.map((e) {
@@ -55,7 +55,7 @@ class _SupplierLoginState extends State<SupplierLogin> {
     final credentials = '${_emailController.text}|${_passwordController.text}';
 
     // Get current history
-    final history = prefs.getStringList('supplier_credentials_history') ?? [];
+    final history = prefs.getStringList('executive_credentials_history') ?? [];
 
     // Add new credentials if not already present
     if (!history.contains(credentials)) {
@@ -64,7 +64,7 @@ class _SupplierLoginState extends State<SupplierLogin> {
       if (history.length > 3) {
         history.removeAt(0);
       }
-      await prefs.setStringList('supplier_credentials_history', history);
+      await prefs.setStringList('executive_credentials_history', history);
     }
   }
 
@@ -73,7 +73,7 @@ class _SupplierLoginState extends State<SupplierLogin> {
       setState(() => _isLoading = true);
 
       try {
-        await _auth.supplierSignIn(
+        await _auth.executiveSignIn(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
@@ -81,7 +81,7 @@ class _SupplierLoginState extends State<SupplierLogin> {
         // Save successful credentials
         await _saveCredentials();
 
-        // On successful login, navigate to supplier dashboard
+        // On successful login, navigate to executive dashboard
         if (mounted) {
           context.go('/order_master');
         }
@@ -126,7 +126,7 @@ class _SupplierLoginState extends State<SupplierLogin> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Supplier Login'),
+        title: const Text('Executive Login'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
@@ -193,7 +193,7 @@ class _SupplierLoginState extends State<SupplierLogin> {
                                 .where((c) => c['email'] != credential['email'])
                                 .toList();
                             await prefs.setStringList(
-                              'supplier_credentials_history',
+                              'executive_credentials_history',
                               updatedHistory
                                   .map((c) => '${c['email']}|${c['password']}')
                                   .toList(),

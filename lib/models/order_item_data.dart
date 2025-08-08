@@ -126,8 +126,8 @@ class OrderItem {
   }
 
   // Calculated property for total amount
-  double get totalAmount => quantity * itemRateAmount;
+  double get totalCalculationAmount => quantity * itemRateAmount;
 
   // Formatted string for amount display
-  String get formattedAmount => '₹${totalAmount.toStringAsFixed(2)}';
+  String get formattedAmount => '₹${totalCalculationAmount.toStringAsFixed(2)}';
 }

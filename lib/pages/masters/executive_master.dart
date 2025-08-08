@@ -4,25 +4,25 @@ import 'package:go_router/go_router.dart';
 import 'package:lighting_company_app/authentication/auth_exception.dart';
 import 'package:lighting_company_app/authentication/auth_models.dart';
 import 'package:lighting_company_app/authentication/auth_service.dart';
-import 'package:lighting_company_app/models/supplier_master_data.dart';
+import 'package:lighting_company_app/models/executive_master_data.dart';
 import 'package:lighting_company_app/pages/masters/utils/compact_form_field.dart';
 import 'package:lighting_company_app/pages/masters/utils/password_form_field.dart';
 import 'package:lighting_company_app/service/firebase_service.dart';
 
-class SupplierMaster extends StatefulWidget {
-  final String? supplierName;
+class ExecutiveMaster extends StatefulWidget {
+  final String? executiveName;
   final bool isDisplayMode;
-  const SupplierMaster({
+  const ExecutiveMaster({
     super.key,
-    this.supplierName,
+    this.executiveName,
     this.isDisplayMode = false,
   });
 
   @override
-  State<SupplierMaster> createState() => _SupplierMasterState();
+  State<ExecutiveMaster> createState() => _ExecutiveMasterState();
 }
 
-class _SupplierMasterState extends State<SupplierMaster> {
+class _ExecutiveMasterState extends State<ExecutiveMaster> {
   final FirebaseService firebaseService = FirebaseService();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
@@ -34,8 +34,8 @@ class _SupplierMasterState extends State<SupplierMaster> {
   bool _isEditing = false;
   bool _isLoading = false;
 
-  SupplierMasterData? _supplierMasterData;
-  String? supplierNameFromArgs;
+  ExecutiveMasterData? _executiveMasterData;
+  String? executiveNameFromArgs;
 
   @override
   void initState() {
@@ -44,33 +44,33 @@ class _SupplierMasterState extends State<SupplierMaster> {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args is String) {
         setState(() {
-          supplierNameFromArgs = args;
+          executiveNameFromArgs = args;
           _isEditing = !widget.isDisplayMode;
         });
-        _fetchSupplierData(widget.supplierName!);
-      } else if (widget.supplierName != null) {
+        _fetchSupplierData(widget.executiveName!);
+      } else if (widget.executiveName != null) {
         setState(() {
           _isEditing = !widget.isDisplayMode;
         });
-        _fetchSupplierData(widget.supplierName!);
+        _fetchSupplierData(widget.executiveName!);
       }
     });
   }
 
-  Future<void> _fetchSupplierData(String supplierName) async {
+  Future<void> _fetchSupplierData(String executiveName) async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final data = await firebaseService.getSupplierBySupplierName(
-        supplierName,
+      final data = await firebaseService.getExecutiveByExecutiveName(
+        executiveName,
       );
 
       if (data != null) {
         setState(() {
-          _supplierMasterData = data;
-          _nameController.text = data.supplierName;
+          _executiveMasterData = data;
+          _nameController.text = data.executiveName;
           _mobileController.text = data.mobileNumber;
           _userIdController.text = data.email;
           _passwordController.text = data.password;
@@ -102,34 +102,34 @@ class _SupplierMasterState extends State<SupplierMaster> {
       });
 
       try {
-        final supplierData = SupplierMasterData(
-          supplierName: _nameController.text.trim(),
+        final executiveData = ExecutiveMasterData(
+          executiveName: _nameController.text.trim(),
           mobileNumber: _mobileController.text.trim(),
           email: _userIdController.text.trim(),
           password: _passwordController.text.trim(),
-          createdAt: _supplierMasterData?.createdAt ?? Timestamp.now(),
+          createdAt: _executiveMasterData?.createdAt ?? Timestamp.now(),
         );
 
         bool success;
 
-        if (_isEditing && _supplierMasterData != null) {
+        if (_isEditing && _executiveMasterData != null) {
           // update existing supplier
           success = await firebaseService
-              .updateSupplierMasterDataBySupplierName(
-                _supplierMasterData!.supplierName,
-                supplierData,
+              .updateExecutiveMasterDataByExecutiveName(
+                _executiveMasterData!.executiveName,
+                executiveData,
               );
         } else {
           // create new supplier - check if mobile number exists
           final existingSupplier = await firebaseService
-              .getSupplierByMobileNumber(supplierData.mobileNumber);
+              .getExecutiveByMobileNumber(executiveData.mobileNumber);
 
           if (existingSupplier != null) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Executive ${supplierData.supplierName} with ${supplierData.mobileNumber} already exists.',
+                    'Executive ${executiveData.executiveName} with ${executiveData.mobileNumber} already exists.',
                   ),
                   backgroundColor: Colors.red,
                 ),
@@ -139,15 +139,15 @@ class _SupplierMasterState extends State<SupplierMaster> {
           }
 
           // Also check if supplier name already exists
-          final existingSupplierByName = await firebaseService
-              .getSupplierBySupplierName(supplierData.supplierName);
+          final existingExecutiveByName = await firebaseService
+              .getExecutiveByExecutiveName(executiveData.executiveName);
 
-          if (existingSupplierByName != null) {
+          if (existingExecutiveByName != null) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Executive ${supplierData.supplierName} already exists.',
+                    'Executive ${executiveData.executiveName} already exists.',
                   ),
                   backgroundColor: Colors.red,
                 ),
@@ -158,16 +158,16 @@ class _SupplierMasterState extends State<SupplierMaster> {
 
           // create auth account first
           final authService = AuthService();
-          await authService.createSupplierAccount(
-            SupplierSignUpData(
-              email: supplierData.email,
-              password: supplierData.password,
-              name: supplierData.supplierName,
-              mobileNumber: supplierData.mobileNumber,
+          await authService.createExecutiveAccount(
+            ExecutiveSignUpData(
+              email: executiveData.email,
+              password: executiveData.password,
+              name: executiveData.executiveName,
+              mobileNumber: executiveData.mobileNumber,
             ),
           );
 
-          success = await firebaseService.addSupplierMasterData(supplierData);
+          success = await firebaseService.addExecutiveMasterData(executiveData);
         }
 
         if (mounted) {
@@ -188,7 +188,7 @@ class _SupplierMasterState extends State<SupplierMaster> {
             _mobileController.clear();
             _userIdController.clear();
             _passwordController.clear();
-            _supplierMasterData = null;
+            _executiveMasterData = null;
             _formKey.currentState?.reset();
 
             if (_isEditing) {
@@ -234,9 +234,9 @@ class _SupplierMasterState extends State<SupplierMaster> {
       appBar: AppBar(
         title: Text(
           widget.isDisplayMode
-              ? 'EXECUTIVE DETAILS: ${supplierNameFromArgs ?? widget.supplierName ?? ''}'
+              ? 'EXECUTIVE DETAILS: ${executiveNameFromArgs ?? widget.executiveName ?? ''}'
               : _isEditing
-              ? 'EDIT EXECUTIVE: ${supplierNameFromArgs ?? widget.supplierName ?? ''}'
+              ? 'EDIT EXECUTIVE: ${executiveNameFromArgs ?? widget.executiveName ?? ''}'
               : 'CREATE NEW EXECUTIVE',
         ),
         centerTitle: true,

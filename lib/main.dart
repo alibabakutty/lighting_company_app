@@ -11,10 +11,10 @@ import 'package:lighting_company_app/pages/fetch-pages/display_fetch_pages.dart'
 import 'package:lighting_company_app/pages/fetch-pages/update_fetch_pages.dart';
 import 'package:lighting_company_app/pages/import_item.dart';
 import 'package:lighting_company_app/pages/login-pages/admin_login.dart';
-import 'package:lighting_company_app/pages/login-pages/supplier_login.dart';
+import 'package:lighting_company_app/pages/login-pages/executive_login.dart';
 import 'package:lighting_company_app/pages/masters/customer_master.dart';
 import 'package:lighting_company_app/pages/masters/item_master.dart';
-import 'package:lighting_company_app/pages/masters/supplier_master.dart';
+import 'package:lighting_company_app/pages/masters/executive_master.dart';
 import 'package:lighting_company_app/pages/order_report.dart';
 import 'package:lighting_company_app/pages/orders/order_master.dart';
 import 'package:provider/provider.dart';
@@ -79,7 +79,7 @@ final _router = GoRouter(
         ),
         GoRoute(
           path: 'supplier_login',
-          builder: (context, state) => const SupplierLogin(),
+          builder: (context, state) => const ExecutiveLogin(),
         ),
         GoRoute(
           path: 'admin_dashboard',
@@ -125,11 +125,11 @@ final _router = GoRouter(
           },
         ),
         GoRoute(
-          path: 'supplier_master',
+          path: 'executive_master',
           builder: (context, state) {
             final args = state.extra as Map<String, dynamic>? ?? {};
-            return SupplierMaster(
-              supplierName: args['supplierName'],
+            return ExecutiveMaster(
+              executiveName: args['executiveName'],
               isDisplayMode: args['isDisplayMode'] ?? false,
             );
           },

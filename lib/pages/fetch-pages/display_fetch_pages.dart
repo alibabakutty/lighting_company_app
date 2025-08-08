@@ -150,7 +150,7 @@ class _DisplayFetchPageState extends State<DisplayFetchPage> {
       case 'executive':
         context.go(
           '/supplier_master',
-          extra: {'supplierName': value, 'isDisplayMode': true},
+          extra: {'executiveName': value, 'isDisplayMode': true},
         );
         break;
       case 'customer':

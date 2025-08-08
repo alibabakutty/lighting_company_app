@@ -234,19 +234,19 @@ class _OrderMasterState extends State<OrderMaster> {
         _currentOrderNumber = _generateOrderNumber();
 
         double totalQty = 0.0;
-        double totalAmount = 0.0;
+        double totalCalculationAmount = 0.0;
         for (var item in validOrderItems) {
           totalQty += item.quantity;
-          totalAmount += item.quantity * item.itemRateAmount;
+          totalCalculationAmount += item.quantity * item.itemRateAmount;
         }
 
         final success = await FirebaseService().addOrderMasterData(
           orderItems: validOrderItems, // Use the filtered list
           orderNumber: _currentOrderNumber,
           totalQty: totalQty,
-          totalAmount: totalAmount,
+          totalCalculationAmount: totalCalculationAmount,
           userName:
-              _currentUser?.supplierName ??
+              _currentUser?.executiveName ??
               _currentUser?.username ??
               'Unknown User',
         );
@@ -293,7 +293,7 @@ class _OrderMasterState extends State<OrderMaster> {
     return orderItems.fold(0, (sum, item) => sum + item.quantity);
   }
 
-  double get _totalAmount {
+  double get _totalCalculationAmount {
     return orderItems.fold(
       0,
       (sum, item) => sum + (item.itemRateAmount * item.quantity),
@@ -322,12 +322,12 @@ class _OrderMasterState extends State<OrderMaster> {
             Text(
               _currentUser?.isAdmin ?? false
                   ? 'Admin Order Management'
-                  : 'Supplier Order Management',
+                  : 'Executive Order Management',
               style: TextStyle(fontSize: 18),
             ),
             if (_currentUser != null)
               Text(
-                _currentUser?.supplierName?.toUpperCase() ??
+                _currentUser?.executiveName?.toUpperCase() ??
                     _currentUser?.username?.toUpperCase() ??
                     '',
                 style: TextStyle(
@@ -536,7 +536,7 @@ class _OrderMasterState extends State<OrderMaster> {
                                 style: totalTextStyle.copyWith(fontSize: 13),
                               ), // Smaller text
                               Text(
-                                '₹${_totalAmount.toStringAsFixed(2)}',
+                                '₹${_totalCalculationAmount.toStringAsFixed(2)}',
                                 style: amountTextStyle.copyWith(fontSize: 13),
                               ), // Smaller text
                             ],

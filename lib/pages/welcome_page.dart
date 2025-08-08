@@ -200,7 +200,7 @@ class WelcomePage extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 30),
-                              // Supplier Login Button
+                              // Executive Login Button
                               SizedBox(
                                 width: double.infinity,
                                 height: 55,
