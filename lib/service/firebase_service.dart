@@ -57,42 +57,50 @@ class FirebaseService {
   }
 
   // Add complete order with items to Firestore
-  Future<bool> addOrderMasterData({
-    required List<OrderItem> orderItems,
-    required String orderNumber,
-    required double totalQty,
-    required double totalCalculationAmount,
-    required String userName,
-  }) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false;
+  // In your FirebaseService class
+Future<bool> addOrderMasterData({
+  required List<OrderItem> orderItems,
+  required String orderNumber,
+  required double totalQty,
+  required double totalCalculationAmount,
+  required String userName,
+  String? customerId, // Add optional customerId parameter for admin/executive
+}) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return false;
 
-    try {
-      DocumentReference orderRef = await _db.collection('orders').add({
-        'order_number': orderNumber,
-        'username': userName, // 👈 Save to Firestore
-        'total_quantity': totalQty,
-        'total_calculation_amount': totalCalculationAmount,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+  try {
+    // Determine the customer ID - use provided one or current user's UID
+    final orderCustomerId = customerId ?? user.uid;
 
-      for (OrderItem item in orderItems) {
-        // calculate net amount before storing
-        double netAmount = item.quantity * item.itemRateAmount;
-        // Get the base item data
-        Map<String, dynamic> itemData = item.toFirestore();
-        // override the netamount
-        itemData['itemNetAmount'] = netAmount;
-        // now store in firestore
-        await orderRef.collection('items').add(itemData);
-      }
-      return true;
-    } catch (e) {
-      // ignore: avoid_print
-      print('Error adding order: $e');
-      return false;
+    // Create the order document
+    final orderData = {
+      'order_number': orderNumber,
+      'customerId': orderCustomerId, // Use determined customer ID
+      'username': userName,
+      'total_quantity': totalQty,
+      'total_amount': totalCalculationAmount,
+      'status': 'pending', // Add status field as required by security rules
+      'createdAt': FieldValue.serverTimestamp(), // Required by security rules
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    DocumentReference orderRef = await _db.collection('orders').add(orderData);
+
+    // Add order items to subcollection
+    for (OrderItem item in orderItems) {
+      double netAmount = item.quantity * item.itemRateAmount;
+      Map<String, dynamic> itemData = item.toFirestore();
+      itemData['itemNetAmount'] = netAmount;
+      await orderRef.collection('items').add(itemData);
     }
+    
+    return true;
+  } catch (e) {
+    print('Error adding order: $e');
+    return false;
   }
+}
 
   // fetch itemmasterdata by itemcode
   Future<ItemMasterData?> getItemByItemCode(int itemCode) async {

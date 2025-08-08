@@ -23,6 +23,8 @@ class CustomerMasterData {
     );
   }
 
+  String? get id => null;
+
   // convert Customer master data object to firestore data
   Map<String, dynamic> toFirestore() {
     return {

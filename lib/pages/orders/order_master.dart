@@ -30,6 +30,7 @@ class _OrderMasterState extends State<OrderMaster> {
   final FirebaseService _firebaseService = FirebaseService();
   List<CustomerMasterData> _allCustomers = [];
   List<ItemMasterData> _allItems = [];
+  CustomerMasterData? _selectedCustomer;
   bool _isLoadingItems = false;
 
   // order number tracking
@@ -214,7 +215,6 @@ class _OrderMasterState extends State<OrderMaster> {
     }
 
     if (_formKey.currentState!.validate()) {
-      // Filter out empty items (where itemName is empty)
       final validOrderItems = orderItems
           .where((item) => item.itemName.isNotEmpty)
           .toList();
@@ -230,7 +230,6 @@ class _OrderMasterState extends State<OrderMaster> {
       }
 
       try {
-        // Generate order number after click submit button
         _currentOrderNumber = _generateOrderNumber();
 
         double totalQty = 0.0;
@@ -240,8 +239,17 @@ class _OrderMasterState extends State<OrderMaster> {
           totalCalculationAmount += item.quantity * item.itemRateAmount;
         }
 
+        // For admin/executive: Get selected customer if available
+        String? selectedCustomerId;
+        if (_currentUser?.isAdmin ?? false || _currentUser!.isExecutive) {
+          // Assuming you have a way to select customer in your UI
+          // For example, if you have a dropdown with _allCustomers
+          selectedCustomerId =
+              _selectedCustomer?.id; // You'll need to implement this
+        }
+
         final success = await FirebaseService().addOrderMasterData(
-          orderItems: validOrderItems, // Use the filtered list
+          orderItems: validOrderItems,
           orderNumber: _currentOrderNumber,
           totalQty: totalQty,
           totalCalculationAmount: totalCalculationAmount,
@@ -249,10 +257,10 @@ class _OrderMasterState extends State<OrderMaster> {
               _currentUser?.executiveName ??
               _currentUser?.username ??
               'Unknown User',
+          customerId: selectedCustomerId, // Pass null for regular customers
         );
 
         if (success) {
-          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -268,7 +276,6 @@ class _OrderMasterState extends State<OrderMaster> {
             _quantityController.clear();
           });
         } else {
-          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Failed to submit order. Please try again.'),
@@ -277,7 +284,6 @@ class _OrderMasterState extends State<OrderMaster> {
           );
         }
       } catch (e) {
-        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error submitting order: $e'),
