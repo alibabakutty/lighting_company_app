@@ -58,49 +58,52 @@ class FirebaseService {
 
   // Add complete order with items to Firestore
   // In your FirebaseService class
-Future<bool> addOrderMasterData({
-  required List<OrderItem> orderItems,
-  required String orderNumber,
-  required double totalQty,
-  required double totalCalculationAmount,
-  required String userName,
-  String? customerId, // Add optional customerId parameter for admin/executive
-}) async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return false;
+  Future<bool> addOrderMasterData({
+    required List<OrderItem> orderItems,
+    required String orderNumber,
+    required double totalQty,
+    required double totalCalculationAmount,
+    required String userName,
+    String? customerId, // Add optional customerId parameter for admin/executive
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
 
-  try {
-    // Determine the customer ID - use provided one or current user's UID
-    final orderCustomerId = customerId ?? user.uid;
+    try {
+      // Determine the customer ID - use provided one or current user's UID
+      final orderCustomerId = customerId ?? user.uid;
 
-    // Create the order document
-    final orderData = {
-      'order_number': orderNumber,
-      'customerId': orderCustomerId, // Use determined customer ID
-      'username': userName,
-      'total_quantity': totalQty,
-      'total_amount': totalCalculationAmount,
-      'status': 'pending', // Add status field as required by security rules
-      'createdAt': FieldValue.serverTimestamp(), // Required by security rules
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
+      // Create the order document
+      final orderData = {
+        'order_number': orderNumber,
+        'customerId': orderCustomerId, // Use determined customer ID
+        'username': userName,
+        'total_quantity': totalQty,
+        'total_calculation_amount': totalCalculationAmount,
+        'status': 'pending', // Add status field as required by security rules
+        'createdAt': FieldValue.serverTimestamp(), // Required by security rules
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
 
-    DocumentReference orderRef = await _db.collection('orders').add(orderData);
+      DocumentReference orderRef = await _db
+          .collection('orders')
+          .add(orderData);
 
-    // Add order items to subcollection
-    for (OrderItem item in orderItems) {
-      double netAmount = item.quantity * item.itemRateAmount;
-      Map<String, dynamic> itemData = item.toFirestore();
-      itemData['itemNetAmount'] = netAmount;
-      await orderRef.collection('items').add(itemData);
+      // Add order items to subcollection
+      for (OrderItem item in orderItems) {
+        double netAmount = item.quantity * item.itemRateAmount;
+        Map<String, dynamic> itemData = item.toFirestore();
+        itemData['itemNetAmount'] = netAmount;
+        await orderRef.collection('items').add(itemData);
+      }
+
+      return true;
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error adding order: $e');
+      return false;
     }
-    
-    return true;
-  } catch (e) {
-    print('Error adding order: $e');
-    return false;
   }
-}
 
   // fetch itemmasterdata by itemcode
   Future<ItemMasterData?> getItemByItemCode(int itemCode) async {

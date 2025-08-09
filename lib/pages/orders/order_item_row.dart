@@ -64,7 +64,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
     _uomController = TextEditingController(text: widget.item.uom);
     _netAmountController = TextEditingController(
       text:
-          '₹${(widget.item.itemRateAmount * widget.item.quantity).toStringAsFixed(2)}',
+          '₹${(widget.item.totalAmount * widget.item.quantity).toStringAsFixed(2)}',
     );
     _itemNameController = TextEditingController(text: widget.item.itemName);
 
@@ -117,7 +117,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
           : widget.item.quantity.toStringAsFixed(2);
       _uomController.text = widget.item.uom;
       _netAmountController.text = formatAmount(
-        widget.item.itemRateAmount * widget.item.quantity,
+        widget.item.totalAmount * widget.item.quantity,
       );
     }
   }
@@ -138,7 +138,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
 
   void _updateAmount() {
     final quantity = double.tryParse(_quantityController.text) ?? 0;
-    final amount = quantity * widget.item.itemRateAmount;
+    final amount = quantity * widget.item.totalAmount;
 
     _netAmountController.text = formatAmount(amount);
 
@@ -157,11 +157,15 @@ class _OrderItemRowState extends State<OrderItemRow> {
       itemRateAmount: selectedItem.itemRateAmount,
       quantity: 1.0,
       uom: selectedItem.uom,
-      itemNetAmount: selectedItem.itemRateAmount * 1.0,
+      gstRate: selectedItem.gstRate,
+      gstAmount: selectedItem.gstAmount,
+      totalAmount: selectedItem.totalAmount,
+      mrpAmount: selectedItem.mrpAmount,
+      itemNetAmount: selectedItem.totalAmount * 1.0,
     );
 
     _quantityController.text = '1';
-    _netAmountController.text = formatAmount(selectedItem.itemRateAmount);
+    _netAmountController.text = formatAmount(selectedItem.totalAmount);
     _itemNameController.text = selectedItem.itemName;
 
     widget.onUpdate(widget.index, newItem);
@@ -320,8 +324,8 @@ class _OrderItemRowState extends State<OrderItemRow> {
                 child: TextFormField(
                   readOnly: true,
                   controller: TextEditingController(
-                    text: widget.item.itemRateAmount > 0
-                        ? '₹${widget.item.itemRateAmount.toStringAsFixed(2)}'
+                    text: widget.item.totalAmount > 0
+                        ? '₹${widget.item.totalAmount.toStringAsFixed(2)}'
                         : '₹0.00',
                   ),
                   decoration: const InputDecoration(
@@ -521,7 +525,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
                             horizontal: 8.0,
                           ),
                           title: Text(
-                            '${item.itemCode} - ${item.itemName} - ₹${item.itemRateAmount}',
+                            '${item.itemCode} - ${item.itemName} - ₹${item.totalAmount}',
                             style: const TextStyle(fontSize: 13, height: 1.1),
                           ),
                           onTap: () => onSelected(item),

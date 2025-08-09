@@ -236,7 +236,7 @@ class _OrderMasterState extends State<OrderMaster> {
         double totalCalculationAmount = 0.0;
         for (var item in validOrderItems) {
           totalQty += item.quantity;
-          totalCalculationAmount += item.quantity * item.itemRateAmount;
+          totalCalculationAmount += item.quantity * item.totalAmount;
         }
 
         // For admin/executive: Get selected customer if available
@@ -302,7 +302,7 @@ class _OrderMasterState extends State<OrderMaster> {
   double get _totalCalculationAmount {
     return orderItems.fold(
       0,
-      (sum, item) => sum + (item.itemRateAmount * item.quantity),
+      (sum, item) => sum + (item.totalAmount * item.quantity),
     );
   }
 

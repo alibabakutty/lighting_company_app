@@ -20,6 +20,10 @@ extension OrderItemExtension on OrderItem {
     itemRateAmount: 0.0,
     quantity: 1,
     uom: '',
+    gstRate: 0.0,
+    gstAmount: 0.0,
+    totalAmount: 0.0,
+    mrpAmount: 0.0,
     itemNetAmount: 0.0,
   );
 }

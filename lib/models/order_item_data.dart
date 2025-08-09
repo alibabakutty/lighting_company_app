@@ -5,6 +5,10 @@ class OrderItem {
   final double quantity;
   final String uom;
   final double itemRateAmount;
+  final double gstRate;
+  final double gstAmount;
+  final double totalAmount;
+  final double mrpAmount;
   final double itemNetAmount;
 
   OrderItem({
@@ -14,6 +18,10 @@ class OrderItem {
     required this.quantity,
     required this.uom,
     required this.itemRateAmount,
+    required this.gstRate,
+    required this.gstAmount,
+    required this.totalAmount,
+    required this.mrpAmount,
     required this.itemNetAmount,
   });
 
@@ -25,6 +33,10 @@ class OrderItem {
     quantity: 1.0,
     uom: '',
     itemRateAmount: 0.0,
+    gstRate: 0.0,
+    gstAmount: 0.0,
+    totalAmount: 0.0,
+    mrpAmount: 0.0,
     itemNetAmount: 0.0,
   );
 
@@ -36,6 +48,10 @@ class OrderItem {
     double? quantity,
     String? uom,
     double? itemRateAmount,
+    double? gstRate,
+    double? gstAmount,
+    double? totalAmount,
+    double? mrpAmount,
     double? itemNetAmount,
   }) {
     return OrderItem(
@@ -47,6 +63,10 @@ class OrderItem {
       uom: uom ?? this.uom,
       quantity: quantity ?? this.quantity,
       itemRateAmount: itemRateAmount ?? this.itemRateAmount,
+      gstRate: gstRate ?? this.gstRate,
+      gstAmount: gstAmount ?? this.gstAmount,
+      totalAmount: totalAmount ?? this.totalAmount,
+      mrpAmount: mrpAmount ?? this.mrpAmount,
       itemNetAmount:
           itemNetAmount ??
           this.itemNetAmount, // Preserve the original itemNetAmount
@@ -62,6 +82,10 @@ class OrderItem {
       'quantity': quantity,
       'uom': uom,
       'itemRateAmount': itemRateAmount,
+      'gstRate': gstRate,
+      'gstAmount': gstAmount,
+      'totalAmount': totalAmount,
+      'mrpAmount': mrpAmount,
       'itemNetAmount': itemNetAmount,
     };
   }
@@ -75,6 +99,10 @@ class OrderItem {
       quantity: map['quantity']?.toDouble() ?? 0.0,
       uom: map['uom'] ?? '',
       itemRateAmount: map['itemRateAmount']?.toDouble() ?? 0.0,
+      gstRate: map['gstRate']?.toDouble() ?? 0.0,
+      gstAmount: map['gstAmount']?.toDouble() ?? 0.0,
+      totalAmount: map['totalAmount']?.toDouble() ?? 0.0,
+      mrpAmount: map['mrpAmount']?.toDouble() ?? 0.0,
       itemNetAmount: map['itemNetAmount']?.toDouble() ?? 0.0,
     );
   }
@@ -90,6 +118,10 @@ class OrderItem {
         other.quantity == quantity &&
         other.uom == uom &&
         other.itemRateAmount == itemRateAmount &&
+        other.gstRate == gstRate &&
+        other.gstAmount == gstAmount &&
+        other.totalAmount == totalAmount &&
+        other.mrpAmount == mrpAmount &&
         other.itemNetAmount == itemNetAmount;
   }
 
@@ -103,6 +135,10 @@ class OrderItem {
       quantity.hashCode,
       uom.hashCode,
       itemRateAmount.hashCode,
+      gstRate.hashCode,
+      gstAmount.hashCode,
+      totalAmount.hashCode,
+      mrpAmount.hashCode,
       itemNetAmount.hashCode,
     );
   }
@@ -117,6 +153,10 @@ class OrderItem {
         'quantity: $quantity, '
         'uom: $uom, '
         'itemNetAmount: $itemNetAmount, '
+        'gstRate: $gstRate, '
+        'gstAmount: $gstAmount, '
+        'totalAmount: $totalAmount, '
+        'mrpAmount: $mrpAmount, '
         'itemRateAmount: $itemRateAmount)';
   }
 
@@ -126,7 +166,7 @@ class OrderItem {
   }
 
   // Calculated property for total amount
-  double get totalCalculationAmount => quantity * itemRateAmount;
+  double get totalCalculationAmount => quantity * totalAmount;
 
   // Formatted string for amount display
   String get formattedAmount => '₹${totalCalculationAmount.toStringAsFixed(2)}';
