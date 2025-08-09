@@ -261,6 +261,7 @@ class _OrderMasterState extends State<OrderMaster> {
         );
 
         if (success) {
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -276,6 +277,7 @@ class _OrderMasterState extends State<OrderMaster> {
             _quantityController.clear();
           });
         } else {
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Failed to submit order. Please try again.'),
@@ -284,6 +286,7 @@ class _OrderMasterState extends State<OrderMaster> {
           );
         }
       } catch (e) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error submitting order: $e'),

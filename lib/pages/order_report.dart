@@ -23,7 +23,7 @@ class _OrderReportState extends State<OrderReport> {
 
   // Totals
   double _totalQuantity = 0;
-  double _totalAmount = 0;
+  double _totalCalculationAmount = 0;
 
   @override
   void initState() {
@@ -55,7 +55,7 @@ class _OrderReportState extends State<OrderReport> {
       _errorMessage = '';
       _flattenedOrders.clear();
       _totalQuantity = 0;
-      _totalAmount = 0;
+      _totalCalculationAmount = 0;
     });
 
     try {
@@ -90,7 +90,8 @@ class _OrderReportState extends State<OrderReport> {
 
         // Calculate totals
         _totalQuantity += (order['total_quantity'] ?? 0).toDouble();
-        _totalAmount += (order['total_amount'] ?? 0).toDouble();
+        _totalCalculationAmount += (order['total_calculation_amount'] ?? 0)
+            .toDouble();
       }
 
       setState(() {
@@ -312,39 +313,6 @@ class _OrderReportState extends State<OrderReport> {
     );
   }
 
-  Widget _buildStatusWidget(String? status) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        // ignore: deprecated_member_use
-        color: _getStatusColor(status).withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _getStatusColor(status)),
-      ),
-      child: Text(
-        (status ?? 'N/A').toUpperCase(),
-        style: TextStyle(
-          color: _getStatusColor(status),
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Color _getStatusColor(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'completed':
-        return Colors.green;
-      case 'pending':
-        return Colors.orange;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
   Widget _buildCell(String text, TextStyle style, Alignment alignment) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -379,6 +347,10 @@ class _OrderReportState extends State<OrderReport> {
       color: Colors.blueGrey.shade800,
     );
 
+    // Reset totals
+    _totalQuantity = 0;
+    _totalCalculationAmount = 0;
+
     // Group items by order number
     final Map<String, List<Map<String, dynamic>>> ordersMap = {};
     for (var order in _flattenedOrders) {
@@ -395,13 +367,23 @@ class _OrderReportState extends State<OrderReport> {
       for (var order in orderItems) {
         final item = order['itemData'] as Map<String, dynamic>?;
 
+        // Calculate GST amount if not directly available
+        double gstAmount = item?['gstAmount'] ?? 0.0;
+        if (gstAmount == 0 &&
+            item?['gstRate'] != null &&
+            item?['itemRateAmount'] != null) {
+          gstAmount =
+              (item!['itemRateAmount'] * item['gstRate'] / 100) *
+              (item['quantity'] ?? 1);
+        }
+
         rows.add(
           DataRow(
             cells: [
               // Date
               DataCell(
                 _buildCell(
-                  DateFormat('dd-MM-yyyy').format(order['timestamp'].toDate()),
+                  DateFormat('dd-MM-yyyy').format(order['createdAt'].toDate()),
                   cellTextStyle,
                   Alignment.centerLeft,
                 ),
@@ -414,10 +396,10 @@ class _OrderReportState extends State<OrderReport> {
                   Alignment.centerLeft,
                 ),
               ),
-              // Supplier
+              // Username
               DataCell(
                 _buildCell(
-                  order['supplier_name'] ?? 'N/A',
+                  order['username'] ?? 'N/A',
                   cellTextStyle,
                   Alignment.centerLeft,
                 ),
@@ -446,20 +428,47 @@ class _OrderReportState extends State<OrderReport> {
                   Alignment.centerRight,
                 ),
               ),
-              // UOM (NEW COLUMN)
+              // UOM
               DataCell(
                 _buildCell(
-                  item?['uom']?.toString() ??
-                      'Nos', // Default to 'NOS' if not available
+                  item?['uom']?.toString() ?? 'Nos',
                   cellTextStyle,
                   Alignment.center,
                 ),
               ),
-              // Rate
+              // GST Rate
               DataCell(
                 _buildCell(
-                  item?['itemRateAmount'] != null
-                      ? formatAmount(item?['itemRateAmount'].toDouble())
+                  item?['gstRate'] != null
+                      ? '${item!['gstRate'].toStringAsFixed(2)}%'
+                      : 'N/A',
+                  cellTextStyle,
+                  Alignment.centerRight,
+                ),
+              ),
+              // GST Amount
+              DataCell(
+                _buildCell(
+                  formatAmount(gstAmount),
+                  cellTextStyle,
+                  Alignment.centerRight,
+                ),
+              ),
+              // Rate (Total Amount)
+              DataCell(
+                _buildCell(
+                  item?['totalAmount'] != null
+                      ? formatAmount(item!['totalAmount'].toDouble())
+                      : 'N/A',
+                  cellTextStyle,
+                  Alignment.centerRight,
+                ),
+              ),
+              // MRP Amount
+              DataCell(
+                _buildCell(
+                  item?['mrpAmount'] != null
+                      ? formatAmount(item!['mrpAmount'].toDouble())
                       : 'N/A',
                   cellTextStyle,
                   Alignment.centerRight,
@@ -469,39 +478,38 @@ class _OrderReportState extends State<OrderReport> {
               DataCell(
                 _buildCell(
                   item?['itemNetAmount'] != null
-                      ? formatAmount(item?['itemNetAmount'].toDouble())
+                      ? formatAmount(item!['itemNetAmount'].toDouble())
                       : 'N/A',
                   cellTextStyle,
                   Alignment.centerRight,
                 ),
               ),
-              // Status
-              DataCell(_buildStatusWidget(order['status'])),
             ],
           ),
         );
+
+        // Update totals
+        if (item != null) {
+          _totalQuantity += (item['quantity'] ?? 0).toDouble();
+          _totalCalculationAmount += (item['itemNetAmount'] ?? 0).toDouble();
+        }
       }
     });
 
     // Add totals row
-    // Update the totals row in the _buildDataTableWithTotals method
+    // In your _buildDataTableWithTotals() method, modify the totals row like this:
     rows.add(
       DataRow(
         color: WidgetStateProperty.resolveWith<Color>(
           (Set<WidgetState> states) => Colors.blueGrey.shade50,
         ),
         cells: [
-          DataCell(Container()), // Empty for Date
-          DataCell(Container()), // Empty for Order #
-          DataCell(Container()), // Empty for Supplier
-          DataCell(Container()), // Empty for Item Code
-          DataCell(
-            _buildCell(
-              'TOTAL',
-              totalTextStyle.copyWith(color: Colors.blueGrey.shade800),
-              Alignment.centerRight,
-            ),
-          ),
+          DataCell(Container()), // Date
+          DataCell(Container()), // Order #
+          DataCell(Container()), // Username
+          DataCell(Container()), // Item Code
+          DataCell(Container()), // Item Name
+          // Quantity column - now properly placed
           DataCell(
             _buildCell(
               _totalQuantity.toStringAsFixed(_totalQuantity % 1 == 0 ? 0 : 2),
@@ -509,16 +517,18 @@ class _OrderReportState extends State<OrderReport> {
               Alignment.centerRight,
             ),
           ),
-          DataCell(Container()), // Remove the "Nos" cell
-          DataCell(Container()), // Empty for Rate
+          DataCell(Container()), // UOM (empty)
+          DataCell(Container()), // GST Rate
+          DataCell(Container()), // GST Amount
+          DataCell(Container()), // Rate (Total Amount)
+          DataCell(Container()), // MRP Amount
           DataCell(
             _buildCell(
-              formatAmount(_totalAmount),
+              formatAmount(_totalCalculationAmount),
               totalTextStyle.copyWith(color: Colors.green.shade700),
               Alignment.centerRight,
             ),
           ),
-          DataCell(Container()), // Empty for Status
         ],
       ),
     );
@@ -556,7 +566,7 @@ class _OrderReportState extends State<OrderReport> {
                   ),
                   DataColumn(
                     label: _buildHeaderCell(
-                      'Supplier',
+                      'User',
                       headerTextStyle,
                       Alignment.centerLeft,
                     ),
@@ -582,7 +592,6 @@ class _OrderReportState extends State<OrderReport> {
                       Alignment.centerRight,
                     ),
                   ),
-                  // NEW UOM COLUMN
                   DataColumn(
                     label: _buildHeaderCell(
                       'UOM',
@@ -591,13 +600,31 @@ class _OrderReportState extends State<OrderReport> {
                     ),
                   ),
                   DataColumn(
-                    label: Padding(
-                      padding: EdgeInsetsGeometry.only(left: 12.0),
-                      child: _buildHeaderCell(
-                        'Rate',
-                        headerTextStyle,
-                        Alignment.centerRight,
-                      ),
+                    label: _buildHeaderCell(
+                      'GST %',
+                      headerTextStyle,
+                      Alignment.centerRight,
+                    ),
+                  ),
+                  DataColumn(
+                    label: _buildHeaderCell(
+                      'GST Amt',
+                      headerTextStyle,
+                      Alignment.centerRight,
+                    ),
+                  ),
+                  DataColumn(
+                    label: _buildHeaderCell(
+                      'Rate (GST)',
+                      headerTextStyle,
+                      Alignment.centerRight,
+                    ),
+                  ),
+                  DataColumn(
+                    label: _buildHeaderCell(
+                      'MRP',
+                      headerTextStyle,
+                      Alignment.centerRight,
                     ),
                   ),
                   DataColumn(
@@ -605,13 +632,6 @@ class _OrderReportState extends State<OrderReport> {
                       'Net Amt',
                       headerTextStyle,
                       Alignment.centerRight,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'Status',
-                      headerTextStyle,
-                      Alignment.centerLeft,
                     ),
                   ),
                 ],
@@ -628,7 +648,7 @@ class _OrderReportState extends State<OrderReport> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ORDER HISTORY'),
+        title: const Text('ORDER REPORT'),
         backgroundColor: Colors.orange.shade700,
       ),
       body: Padding(

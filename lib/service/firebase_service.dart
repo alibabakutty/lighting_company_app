@@ -91,7 +91,7 @@ class FirebaseService {
 
       // Add order items to subcollection
       for (OrderItem item in orderItems) {
-        double netAmount = item.quantity * item.itemRateAmount;
+        double netAmount = item.quantity * item.totalAmount;
         Map<String, dynamic> itemData = item.toFirestore();
         itemData['itemNetAmount'] = netAmount;
         await orderRef.collection('items').add(itemData);
@@ -190,10 +190,10 @@ class FirebaseService {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('orders')
         .where(
-          'timestamp',
+          'createdAt',
           isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
         )
-        .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+        .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
         .get();
 
     return querySnapshot.docs.map((doc) {
@@ -224,9 +224,9 @@ class FirebaseService {
 
       QuerySnapshot snapshot = await _db
           .collection('orders')
-          .where('timestamp', isGreaterThanOrEqualTo: startDate)
-          .where('timestamp', isLessThanOrEqualTo: adjustedEndDate)
-          .orderBy('timestamp', descending: true)
+          .where('createdAt', isGreaterThanOrEqualTo: startDate)
+          .where('createdAt', isLessThanOrEqualTo: adjustedEndDate)
+          .orderBy('createdAt', descending: true)
           .get();
 
       return snapshot.docs.map((doc) {
@@ -249,7 +249,7 @@ class FirebaseService {
       // Attempt server-side sorted query first
       QuerySnapshot snapshot = await _db
           .collection('orders')
-          .where('executive_name', isEqualTo: executiveName)
+          .where('username', isEqualTo: executiveName)
           .orderBy('timestamp', descending: true)
           .get(const GetOptions(source: Source.server));
 
@@ -280,7 +280,7 @@ class FirebaseService {
     try {
       QuerySnapshot snapshot = await _db
           .collection('orders')
-          .where('executive_name', isEqualTo: executiveName)
+          .where('username', isEqualTo: executiveName)
           .get();
 
       final orders =
