@@ -13,12 +13,12 @@ class UpdateFetchPages extends StatefulWidget {
 
 class _DisplayFetchPageState extends State<UpdateFetchPages> {
   List<Map<String, dynamic>> items = [];
-  List<Map<String, dynamic>> suppliers = [];
+  List<Map<String, dynamic>> executives = [];
   List<Map<String, dynamic>> customers = [];
 
   bool isLoading = false;
   bool hasFetchedItems = false;
-  bool hasFetchedSuppliers = false;
+  bool hasFetchedExecutives = false;
   bool hasFetchedCustomers = false;
 
   @override
@@ -39,7 +39,7 @@ class _DisplayFetchPageState extends State<UpdateFetchPages> {
           await _fetchItems();
           break;
         case 'executive':
-          await _fetchSuppliers();
+          await _fetchExecutives();
           break;
         case 'customer':
           await _fetchCustomers();
@@ -86,29 +86,29 @@ class _DisplayFetchPageState extends State<UpdateFetchPages> {
     }
   }
 
-  Future<void> _fetchSuppliers() async {
+  Future<void> _fetchExecutives() async {
     try {
       QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('supplier_master_data')
+          .collection('executive_master_data')
           .get();
 
       if (!mounted) return;
 
       setState(() {
-        suppliers = snapshot.docs.map((doc) {
+        executives = snapshot.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           return {
-            'name': data['supplier_name'] as String? ?? '',
+            'name': data['executive_name'] as String? ?? '',
             'contact': data['mobile_number'] as String? ?? '',
           };
         }).toList();
-        hasFetchedSuppliers = true;
+        hasFetchedExecutives = true;
       });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error fetching suppliers: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error fetching executives: $e')));
     }
   }
 
@@ -149,7 +149,7 @@ class _DisplayFetchPageState extends State<UpdateFetchPages> {
         break;
       case 'executive':
         context.go(
-          '/supplier_master',
+          '/executive_master',
           extra: {'executiveName': value, 'isDisplayMode': false},
         );
         break;
@@ -214,7 +214,7 @@ class _DisplayFetchPageState extends State<UpdateFetchPages> {
       case 'executive':
         return _buildMasterList(
           header: const ['Executive Name', 'Contact'],
-          data: suppliers,
+          data: executives,
           nameKey: 'name',
           secondaryKey: 'contact',
           icon: Icons.business,

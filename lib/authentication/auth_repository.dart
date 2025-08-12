@@ -41,6 +41,7 @@ class AuthRepository {
     required String uid,
     required Map<String, dynamic> data,
     required UserRole role,
+    GeoPoint? location,
   }) async {
     try {
       final collection = role == UserRole.admin
@@ -53,6 +54,7 @@ class AuthRepository {
         ...data,
         'created_at': FieldValue.serverTimestamp(),
         'last_login': FieldValue.serverTimestamp(),
+        'lastLoginLocation': location,
       });
     } on FirebaseException catch (e) {
       throw AuthException(
@@ -121,6 +123,31 @@ class AuthRepository {
       throw AuthException(
         code: e.code,
         message: 'Failed to fetch sessions: ${e.message}',
+      );
+    }
+  }
+
+  // In your AuthRepository class
+  Future<void> updateUserLoginLocation({
+    required String uid,
+    required UserRole role,
+    required GeoPoint? location,
+  }) async {
+    try {
+      final collection = role == UserRole.admin
+          ? 'admins'
+          : role == UserRole.executive
+          ? 'executives'
+          : 'users';
+
+      await _firestore.collection(collection).doc(uid).update({
+        'lastLoginLocation': location,
+        'last_login': FieldValue.serverTimestamp(),
+      });
+    } on FirebaseException catch (e) {
+      throw AuthException(
+        code: e.code,
+        message: 'Failed to update login location: ${e.message}',
       );
     }
   }

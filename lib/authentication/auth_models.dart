@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum UserRole { user, admin, executive }
 
 class AuthUser {
@@ -7,6 +9,7 @@ class AuthUser {
   final String? email;
   final String? mobileNumber;
   final UserRole role;
+  final GeoPoint? lastLoginLocation;
 
   AuthUser({
     required this.uid,
@@ -15,6 +18,7 @@ class AuthUser {
     this.email,
     this.mobileNumber,
     this.role = UserRole.user,
+    this.lastLoginLocation,
   });
 
   factory AuthUser.fromMap(
@@ -31,6 +35,7 @@ class AuthUser {
       mobileNumber:
           data['mobileNumber']?.toString() ?? data['mobile_number']?.toString(),
       role: role,
+      lastLoginLocation: data['lastLoginLocation'] as GeoPoint?,
     );
   }
 

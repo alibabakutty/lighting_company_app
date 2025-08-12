@@ -1,6 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:lighting_company_app/authentication/auth_exception.dart';
-import 'package:lighting_company_app/authentication/auth_service.dart';
+import 'package:lighting_company_app/authentication/auth_provider.dart';
+import 'package:lighting_company_app/service/location_service.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,8 +23,11 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
   bool _isLoading = false;
   List<Map<String, String>> _credentialsHistory = [];
   bool _showCredentialsHistory = false;
-
-  final AuthService _auth = AuthService();
+  // Location related state
+  Position? _loginPosition;
+  String _locationAddress = '';
+  String _locationError = '';
+  bool _isLocationLoading = false;
 
   @override
   void initState() {
@@ -70,12 +77,58 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+      setState(() {
+        _isLoading = true;
+        _isLocationLoading = true;
+        _locationError = '';
+      });
 
       try {
-        await _auth.executiveSignIn(
+        // Step 1: Get current location
+        _loginPosition = await LocationService.getCurrentLocation();
+
+        if (_loginPosition == null) {
+          setState(() {
+            _locationError =
+                'Could not verify your location. Please enable location services.';
+            _isLoading = false;
+            _isLocationLoading = false;
+          });
+          return;
+        }
+
+        // Step 2: Verify if within authorized area
+        // bool isAuthorized = await LocationService.isWithinAuthorizedArea(
+        //   _loginPosition!,
+        // );
+        // if (!isAuthorized) {
+        //   setState(() {
+        //     _locationError =
+        //         'Login only allowed from authorized company locations';
+        //     _isLoading = false;
+        //     _isLocationLoading = false;
+        //   });
+        //   return;
+        // }
+
+        // Step 3: Get address for display
+        _locationAddress = await LocationService.getAddressFromPosition(
+          _loginPosition!,
+        );
+
+        // Step 4: Convert Position to GeoPoint
+        final loginLocation = GeoPoint(
+          _loginPosition!.latitude,
+          _loginPosition!.longitude,
+        );
+
+        // Step 5: Proceed with authentication
+        // ignore: use_build_context_synchronously
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        await authProvider.supplierSignIn(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
+          loginLocation: loginLocation,
         );
 
         // Save successful credentials
@@ -108,7 +161,10 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
         }
       } finally {
         if (mounted) {
-          setState(() => _isLoading = false);
+          setState(() {
+            _isLoading = false;
+            _isLocationLoading = false;
+          });
         }
       }
     }
@@ -273,6 +329,53 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
                         return null;
                       },
                     ),
+
+                    // Location verification UI
+                    if (_isLocationLoading) ...[
+                      const SizedBox(height: 16),
+                      const LinearProgressIndicator(),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Verifying your location...',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                    ],
+                    if (_locationError.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        _locationError,
+                        style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                    if (_loginPosition != null &&
+                        _locationAddress.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Verified Location:',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(_locationAddress),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Coordinates: ${_loginPosition!.latitude.toStringAsFixed(6)}, '
+                                '${_loginPosition!.longitude.toStringAsFixed(6)}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+
                     const SizedBox(height: 8),
                     // Forgot password
                     Align(

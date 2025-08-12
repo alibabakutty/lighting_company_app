@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lighting_company_app/authentication/auth_exception.dart';
 import 'package:lighting_company_app/authentication/auth_models.dart';
@@ -32,6 +33,7 @@ class AuthService {
     required String email,
     required String password,
     required UserRole expectedRole,
+    required GeoPoint? loginLocation,
   }) async {
     try {
       email = email.trim();
@@ -66,9 +68,20 @@ class AuthService {
         );
       }
 
+      // Update the user's last login location
+    await _authRepository.updateUserLoginLocation(
+      uid: user.uid,
+      role: authUser.role,
+      location: loginLocation,
+    );
+  
       // Create a new session
       final sessionToken = _generateSessionToken();
-      final session = AuthSession(user: authUser, sessionToken: sessionToken);
+      final session = AuthSession(
+        user: authUser,
+        sessionToken: sessionToken,
+        loginLocation: loginLocation,
+      );
 
       await _authRepository.createSession(session);
 
@@ -112,19 +125,23 @@ class AuthService {
   Future<AuthUser> adminSignIn({
     required String email,
     required String password,
+    required GeoPoint loginLocation,
   }) async => _signInWithRole(
     email: email,
     password: password,
     expectedRole: UserRole.admin,
+    loginLocation: loginLocation,
   );
 
   Future<AuthUser> executiveSignIn({
     required String email,
     required String password,
+    required GeoPoint loginLocation,
   }) async => _signInWithRole(
     email: email,
     password: password,
     expectedRole: UserRole.executive,
+    loginLocation: loginLocation,
   );
 
   Future<AuthUser> _createUserWithRole(

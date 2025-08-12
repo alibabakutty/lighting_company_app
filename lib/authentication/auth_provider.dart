@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:lighting_company_app/authentication/auth_exception.dart';
 import 'package:lighting_company_app/authentication/auth_models.dart';
@@ -99,16 +100,17 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> adminSignIn({required String email, required String password}) =>
+  Future<void> adminSignIn({required String email, required String password, required GeoPoint loginLocation}) =>
       _handleAuthOperation(
-        () => _authService.adminSignIn(email: email, password: password),
+        () => _authService.adminSignIn(email: email, password: password, loginLocation: loginLocation),
       );
 
   Future<void> supplierSignIn({
     required String email,
     required String password,
+    required GeoPoint loginLocation,
   }) => _handleAuthOperation(
-    () => _authService.executiveSignIn(email: email, password: password),
+    () => _authService.executiveSignIn(email: email, password: password, loginLocation: loginLocation),
   );
 
   Future<void> createAdminAccount(AdminSignUpData data) =>
