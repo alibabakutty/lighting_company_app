@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lighting_company_app/authentication/auth_exception.dart';
@@ -69,12 +68,12 @@ class AuthService {
       }
 
       // Update the user's last login location
-    await _authRepository.updateUserLoginLocation(
-      uid: user.uid,
-      role: authUser.role,
-      location: loginLocation,
-    );
-  
+      await _authRepository.updateUserLoginLocation(
+        uid: user.uid,
+        role: authUser.role,
+        location: loginLocation,
+      );
+
       // Create a new session
       final sessionToken = _generateSessionToken();
       final session = AuthSession(
@@ -211,5 +210,13 @@ class AuthService {
         message: AuthErrorMessages.getMessage(e.code),
       );
     }
+  }
+
+  Future<List<AuthUser>> getAllAdmins() async {
+    return await _authRepository.getAllAdmins();
+  }
+
+  Future<List<AuthUser>> getAllExecutives() async {
+    return await _authRepository.getAllExecutives();
   }
 }

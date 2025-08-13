@@ -23,6 +23,7 @@ class LocationService {
       }
 
       return await Geolocator.getCurrentPosition(
+        // ignore: deprecated_member_use
         desiredAccuracy: LocationAccuracy.high,
       );
     } catch (e) {

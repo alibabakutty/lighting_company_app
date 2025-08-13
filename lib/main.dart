@@ -8,6 +8,8 @@ import 'package:lighting_company_app/firebase_options.dart';
 import 'package:lighting_company_app/pages/admin_dashboard.dart';
 import 'package:lighting_company_app/pages/cda_page.dart';
 import 'package:lighting_company_app/pages/fetch-pages/display_fetch_pages.dart';
+import 'package:lighting_company_app/pages/fetch-pages/fetch_location_admin.dart';
+import 'package:lighting_company_app/pages/fetch-pages/fetch_location_executive.dart';
 import 'package:lighting_company_app/pages/fetch-pages/update_fetch_pages.dart';
 import 'package:lighting_company_app/pages/import_item.dart';
 import 'package:lighting_company_app/pages/login-pages/admin_login.dart';
@@ -17,6 +19,7 @@ import 'package:lighting_company_app/pages/masters/item_master.dart';
 import 'package:lighting_company_app/pages/masters/executive_master.dart';
 import 'package:lighting_company_app/pages/order_report.dart';
 import 'package:lighting_company_app/pages/orders/order_master.dart';
+import 'package:lighting_company_app/pages/view_location.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -147,6 +150,18 @@ final _router = GoRouter(
         GoRoute(
           path: 'import_item',
           builder: (context, state) => const ImportItem(),
+        ),
+        GoRoute(
+          path: 'view_location',
+          builder: (context, state) => const ViewLocation(),
+        ),
+        GoRoute(
+          path: 'fetch_location_admin',
+          builder: (context, state) => const FetchLocationAdmin(),
+        ),
+        GoRoute(
+          path: 'fetch_location_executive',
+          builder: (context, state) => const FetchLocationExecutive(),
         ),
         // GoRoute(
         //   path: 'export_excel_orders',

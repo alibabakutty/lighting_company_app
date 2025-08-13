@@ -100,17 +100,28 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> adminSignIn({required String email, required String password, required GeoPoint loginLocation}) =>
-      _handleAuthOperation(
-        () => _authService.adminSignIn(email: email, password: password, loginLocation: loginLocation),
-      );
+  Future<void> adminSignIn({
+    required String email,
+    required String password,
+    required GeoPoint loginLocation,
+  }) => _handleAuthOperation(
+    () => _authService.adminSignIn(
+      email: email,
+      password: password,
+      loginLocation: loginLocation,
+    ),
+  );
 
   Future<void> supplierSignIn({
     required String email,
     required String password,
     required GeoPoint loginLocation,
   }) => _handleAuthOperation(
-    () => _authService.executiveSignIn(email: email, password: password, loginLocation: loginLocation),
+    () => _authService.executiveSignIn(
+      email: email,
+      password: password,
+      loginLocation: loginLocation,
+    ),
   );
 
   Future<void> createAdminAccount(AdminSignUpData data) =>
@@ -152,5 +163,39 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  Future<List<AuthUser>> getAllAdmins() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final admins = await _authService.getAllAdmins();
+      _isLoading = false;
+      notifyListeners();
+      return admins;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<List<AuthUser>> getAllExecutives() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final executives = await _authService.getAllExecutives();
+      _isLoading = false;
+      notifyListeners();
+      return executives;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
+    }
   }
 }

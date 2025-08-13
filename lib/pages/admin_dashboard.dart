@@ -205,6 +205,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     },
                   ),
                   const SizedBox(height: 5),
+                  // Location Master Card
+                  _buildMasterCard(
+                    context,
+                    title: 'View Locations',
+                    subtitle: 'View all users Locations',
+                    icon: Icons.location_on_outlined,
+                    color: Colors.red.shade700,
+                    onTap: () {
+                      context.go('/view_location');
+                    },
+                  ),
+                  const SizedBox(height: 5),
                   // Table Master Card
                   // _buildMasterCard(
                   //   context,

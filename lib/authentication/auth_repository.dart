@@ -151,4 +151,32 @@ class AuthRepository {
       );
     }
   }
+
+  Future<List<AuthUser>> getAllAdmins() async {
+    try {
+      final snapshot = await _firestore.collection('admins').get();
+      return snapshot.docs.map((doc) {
+        return AuthUser.fromMap(doc.data(), doc.id, UserRole.admin);
+      }).toList();
+    } on FirebaseException catch (e) {
+      throw AuthException(
+        code: e.code,
+        message: 'Failed to fetch admins: ${e.message}',
+      );
+    }
+  }
+
+  Future<List<AuthUser>> getAllExecutives() async {
+    try {
+      final snapshot = await _firestore.collection('executives').get();
+      return snapshot.docs.map((doc) {
+        return AuthUser.fromMap(doc.data(), doc.id, UserRole.executive);
+      }).toList();
+    } on FirebaseException catch (e) {
+      throw AuthException(
+        code: e.code,
+        message: 'Failed to fetch executives: ${e.message}',
+      );
+    }
+  }
 }
