@@ -7,6 +7,7 @@ import 'package:lighting_company_app/authentication/auth_service.dart';
 import 'package:lighting_company_app/firebase_options.dart';
 import 'package:lighting_company_app/pages/admin_dashboard.dart';
 import 'package:lighting_company_app/pages/cda_page.dart';
+import 'package:lighting_company_app/pages/export_order.dart';
 import 'package:lighting_company_app/pages/fetch-pages/display_fetch_pages.dart';
 import 'package:lighting_company_app/pages/fetch-pages/fetch_location_admin.dart';
 import 'package:lighting_company_app/pages/fetch-pages/fetch_location_executive.dart';
@@ -163,10 +164,10 @@ final _router = GoRouter(
           path: 'fetch_location_executive',
           builder: (context, state) => const FetchLocationExecutive(),
         ),
-        // GoRoute(
-        //   path: 'export_excel_orders',
-        //   builder: (context, state) => const ExportExcelOrders(),
-        // ),
+        GoRoute(
+          path: 'export_order',
+          builder: (context, state) => const ExportOrder(),
+        ),
         GoRoute(
           path: 'order_report',
           builder: (context, state) => const OrderReport(),

@@ -404,6 +404,14 @@ class _OrderReportState extends State<OrderReport> {
                   Alignment.centerLeft,
                 ),
               ),
+              // Customer Name (new column)
+              DataCell(
+                _buildCell(
+                  item?['customerName']?.toString() ?? 'N/A',
+                  cellTextStyle,
+                  Alignment.centerLeft,
+                ),
+              ),
               // Item Code
               DataCell(
                 _buildCell(
@@ -497,7 +505,6 @@ class _OrderReportState extends State<OrderReport> {
     });
 
     // Add totals row
-    // In your _buildDataTableWithTotals() method, modify the totals row like this:
     rows.add(
       DataRow(
         color: WidgetStateProperty.resolveWith<Color>(
@@ -507,9 +514,10 @@ class _OrderReportState extends State<OrderReport> {
           DataCell(Container()), // Date
           DataCell(Container()), // Order #
           DataCell(Container()), // Username
+          DataCell(Container()), // Customer Name
           DataCell(Container()), // Item Code
           DataCell(Container()), // Item Name
-          // Quantity column - now properly placed
+          // Quantity column
           DataCell(
             _buildCell(
               _totalQuantity.toStringAsFixed(_totalQuantity % 1 == 0 ? 0 : 2),
@@ -567,6 +575,13 @@ class _OrderReportState extends State<OrderReport> {
                   DataColumn(
                     label: _buildHeaderCell(
                       'User',
+                      headerTextStyle,
+                      Alignment.centerLeft,
+                    ),
+                  ),
+                  DataColumn(
+                    label: _buildHeaderCell(
+                      'Customer',
                       headerTextStyle,
                       Alignment.centerLeft,
                     ),
