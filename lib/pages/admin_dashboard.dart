@@ -172,12 +172,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   // Import Item Master Card
                   _buildMasterCard(
                     context,
-                    title: 'Import Items via Excel',
-                    subtitle: 'Import your items',
+                    title: 'Import via Excel',
+                    subtitle: 'Import your customers and masters',
                     icon: Icons.download_outlined,
                     color: Colors.green.shade700,
                     onTap: () {
-                      context.go('/import_item');
+                      context.go('/import_main');
                     },
                   ),
                   const SizedBox(height: 5),
@@ -217,17 +217,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     },
                   ),
                   const SizedBox(height: 5),
-                  // Table Master Card
-                  _buildMasterCard(
-                    context,
-                    title: 'Export Excel Orders',
-                    subtitle: 'Export all orders to Excel',
-                    icon: Icons.upload_file_outlined,
-                    color: Colors.green.shade700,
-                    onTap: () {
-                      context.go('/export_order');
-                    },
-                  ),
 
                   // Spacer to push content up
                   const Spacer(),

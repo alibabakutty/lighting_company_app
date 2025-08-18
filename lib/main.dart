@@ -7,12 +7,13 @@ import 'package:lighting_company_app/authentication/auth_service.dart';
 import 'package:lighting_company_app/firebase_options.dart';
 import 'package:lighting_company_app/pages/admin_dashboard.dart';
 import 'package:lighting_company_app/pages/cda_page.dart';
-import 'package:lighting_company_app/pages/export_order.dart';
 import 'package:lighting_company_app/pages/fetch-pages/display_fetch_pages.dart';
 import 'package:lighting_company_app/pages/fetch-pages/fetch_location_admin.dart';
 import 'package:lighting_company_app/pages/fetch-pages/fetch_location_executive.dart';
 import 'package:lighting_company_app/pages/fetch-pages/update_fetch_pages.dart';
-import 'package:lighting_company_app/pages/import_item.dart';
+import 'package:lighting_company_app/pages/import/import_customer.dart';
+import 'package:lighting_company_app/pages/import/import_item.dart';
+import 'package:lighting_company_app/pages/import/import_main.dart';
 import 'package:lighting_company_app/pages/login-pages/admin_login.dart';
 import 'package:lighting_company_app/pages/login-pages/executive_login.dart';
 import 'package:lighting_company_app/pages/masters/customer_master.dart';
@@ -149,8 +150,16 @@ final _router = GoRouter(
           },
         ),
         GoRoute(
+          path: 'import_main',
+          builder: (context, state) => const ImportMain(),
+        ),
+        GoRoute(
           path: 'import_item',
           builder: (context, state) => const ImportItem(),
+        ),
+        GoRoute(
+          path: 'import_customer',
+          builder: (context, state) => const ImportCustomer(),
         ),
         GoRoute(
           path: 'view_location',
@@ -163,10 +172,6 @@ final _router = GoRouter(
         GoRoute(
           path: 'fetch_location_executive',
           builder: (context, state) => const FetchLocationExecutive(),
-        ),
-        GoRoute(
-          path: 'export_order',
-          builder: (context, state) => const ExportOrder(),
         ),
         GoRoute(
           path: 'order_report',

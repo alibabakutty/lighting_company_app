@@ -5,6 +5,13 @@
     <!-- Internet permission for Google Maps -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Add these new permissions for file storage -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- For Android 10+ -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+                     android:minSdkVersion="30" />
+
     <application
         android:label="Light Company"
         android:name="${applicationName}"
@@ -13,6 +20,17 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBJo2k8klJywcZNuIwAfSo1bO3gA-4p0iE"/>
+
+        <!-- Add this provider for file access -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
 
         <activity
             android:name=".MainActivity"
@@ -30,7 +48,16 @@
               />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.permission.CATEGORY_DEFAULT"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
+            <!-- Add this intent filter for viewing files -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/vnd.ms-excel" />
+                <data android:mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
@@ -61,6 +88,13 @@
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="comgooglemaps" />
+        </intent>
+
+        <!-- Add this query for file managers -->
+        <intent>
+            <action android:name="android.intent.action.GET_CONTENT" />
+            <category android:name="android.intent.category.OPENABLE" />
+            <data android:mimeType="*/*" />
         </intent>
     </queries>
 </manifest>

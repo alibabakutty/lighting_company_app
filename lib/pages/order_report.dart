@@ -1,6 +1,10 @@
+import 'dart:io';
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lighting_company_app/service/firebase_service.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 
 class OrderReport extends StatefulWidget {
   const OrderReport({super.key});
@@ -29,6 +33,162 @@ class _OrderReportState extends State<OrderReport> {
   void initState() {
     super.initState();
     _loadInitialData();
+  }
+
+  // Helper function to create a row of CellValues from an order
+  List<CellValue> _createRow(Map<String, dynamic> order) {
+    final item = order['itemData'] as Map<String, dynamic>?;
+
+    // Calculate GST amount if needed
+    double gstAmount = item?['gstAmount'] ?? 0.0;
+    if (gstAmount == 0 &&
+        item?['gstRate'] != null &&
+        item?['itemRateAmount'] != null) {
+      gstAmount =
+          (item!['itemRateAmount'] * item['gstRate'] / 100) *
+          (item['quantity'] ?? 1);
+    }
+
+    return [
+      TextCellValue(
+        DateFormat('dd-MM-yyyy').format(order['createdAt'].toDate()),
+      ),
+      TextCellValue(order['order_number']?.toString() ?? 'N/A'),
+      TextCellValue(order['username'] ?? 'N/A'),
+      TextCellValue(item?['customerName']?.toString() ?? 'N/A'),
+      TextCellValue(item?['itemCode']?.toString() ?? 'N/A'),
+      TextCellValue(item?['itemName']?.toString() ?? 'N/A'),
+      DoubleCellValue(item?['quantity']?.toDouble() ?? 0.0),
+      TextCellValue(item?['uom']?.toString() ?? 'Nos'),
+      TextCellValue(
+        item?['gstRate'] != null
+            ? '${item!['gstRate'].toStringAsFixed(2)}%'
+            : 'N/A',
+      ),
+      DoubleCellValue(gstAmount),
+      DoubleCellValue(item?['totalAmount']?.toDouble() ?? 0.0),
+      DoubleCellValue(item?['mrpAmount']?.toDouble() ?? 0.0),
+      DoubleCellValue(item?['itemNetAmount']?.toDouble() ?? 0.0),
+    ];
+  }
+
+  Future<void> _exportToExcel() async {
+    if (_flattenedOrders.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No data to export')));
+      return;
+    }
+
+    try {
+      // Debug print to verify data
+      debugPrint('===== EXPORT DEBUG =====');
+      debugPrint('Number of orders: ${_flattenedOrders.length}');
+      if (_flattenedOrders.isNotEmpty) {
+        debugPrint('First order data: ${_flattenedOrders.first}');
+        debugPrint(
+          'First order createdAt: ${_flattenedOrders.first['createdAt']}',
+        );
+        debugPrint(
+          'First order itemData: ${_flattenedOrders.first['itemData']}',
+        );
+      }
+
+      // Create Excel workbook
+      final excel = Excel.createExcel();
+      final sheet = excel['Order Report'];
+
+      // Define headers
+      final headers = [
+        'Date',
+        'Order #',
+        'User',
+        'Customer',
+        'Item Code',
+        'Item Name',
+        'Quantity',
+        'UOM',
+        'GST %',
+        'GST Amount',
+        'Rate (GST)',
+        'MRP',
+        'Net Amount',
+      ];
+
+      // Add header row
+      sheet.appendRow(headers.map((h) => TextCellValue(h)).toList());
+
+      // Add data rows
+      for (var order in _flattenedOrders) {
+        try {
+          final row = _createRow(order);
+          sheet.appendRow(row);
+        } catch (e) {
+          debugPrint(
+            'Error creating row for order ${order['order_number']}: $e',
+          );
+        }
+      }
+
+      // Add totals row
+      final totalsRow = [
+        '',
+        '',
+        '',
+        '',
+        '',
+        'TOTAL',
+        _totalQuantity,
+        '',
+        '',
+        '',
+        '',
+        '',
+        _totalCalculationAmount,
+      ];
+      sheet.appendRow(
+        totalsRow
+            .map(
+              (v) => v is num
+                  ? DoubleCellValue(v.toDouble())
+                  : TextCellValue(v.toString()),
+            )
+            .toList(),
+      );
+
+      // Save to temporary directory first for testing
+      final directory = await getTemporaryDirectory();
+      final filePath =
+          '${directory.path}/orders_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      debugPrint('Attempting to save to: $filePath');
+
+      final excelBytes = excel.encode();
+      if (excelBytes == null) {
+        throw Exception('Excel encode returned null');
+      }
+
+      final file = File(filePath);
+      await file.writeAsBytes(excelBytes, flush: true);
+      debugPrint('File written successfully');
+
+      // Verify file exists
+      if (await file.exists()) {
+        debugPrint('File exists, size: ${file.lengthSync()} bytes');
+        await OpenFile.open(filePath);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Report saved to $filePath')));
+      } else {
+        throw Exception('File was not created');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('===== EXPORT ERROR =====');
+      debugPrint('Error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Export failed: ${e.toString()}')));
+    }
   }
 
   Future<void> _loadInitialData() async {
@@ -665,6 +825,13 @@ class _OrderReportState extends State<OrderReport> {
       appBar: AppBar(
         title: const Text('ORDER REPORT'),
         backgroundColor: Colors.orange.shade700,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.file_upload),
+            tooltip: 'Export to Excel',
+            onPressed: _flattenedOrders.isEmpty ? null : _exportToExcel,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
