@@ -38,11 +38,8 @@ class OrderItemRow extends StatefulWidget {
 
 class _OrderItemRowState extends State<OrderItemRow> {
   late FocusNode _itemSearchFocusNode;
-  late FocusNode _customerSearchFocusNode;
   late TextEditingController _customerNameController;
   late TextEditingController _itemNameController;
-  final TextEditingController _customerSearchController =
-      TextEditingController();
   final TextEditingController _itemSearchController = TextEditingController();
   late TextEditingController _quantityController;
   late TextEditingController _uomController;
@@ -52,10 +49,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
   void initState() {
     super.initState();
     _itemSearchFocusNode = FocusNode();
-    _customerSearchFocusNode = FocusNode();
-    _customerNameController = TextEditingController(
-      text: widget.item.customerName,
-    );
     _quantityController = TextEditingController(
       text: widget.item.quantity % 1 == 0
           ? widget.item.quantity.toInt().toString()
@@ -70,17 +63,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
 
     _quantityController.addListener(_updateAmount);
     _itemNameController.addListener(_handleNameChange);
-  }
-
-  void _handleCustomerChange(CustomerMasterData selectedCustomer) {
-    final newCustomer = widget.item.copyWith(
-      customerName: selectedCustomer.customerName,
-    );
-
-    _customerNameController.text = selectedCustomer.customerName;
-    widget.onUpdate(widget.index, newCustomer);
-    widget.onCustomerSelected();
-    _customerSearchController.clear();
   }
 
   void _handleNameChange() {
@@ -111,7 +93,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
       } else {
         _itemNameController.text = widget.item.itemName;
       }
-      _customerNameController.text = widget.item.customerName;
       _quantityController.text = widget.item.quantity % 1 == 0
           ? widget.item.quantity.toInt().toString()
           : widget.item.quantity.toStringAsFixed(2);
@@ -151,7 +132,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
 
   void _handleItemSelected(ItemMasterData selectedItem) {
     final newItem = OrderItem(
-      customerName: widget.item.customerName,
       itemCode: selectedItem.itemCode.toString(),
       itemName: selectedItem.itemName,
       itemRateAmount: selectedItem.itemRateAmount,
@@ -200,39 +180,9 @@ class _OrderItemRowState extends State<OrderItemRow> {
                 ),
               ),
 
-              // Customer Name
-              SizedBox(
-                width: 130,
-                height: 32,
-                child: widget.item.customerName.isEmpty
-                    ? _buildCustomerSearchField()
-                    : TextFormField(
-                        controller: _customerNameController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 8,
-                          ),
-                          isDense: true,
-                        ),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                        onChanged: (value) {
-                          widget.onUpdate(
-                            widget.index,
-                            widget.item.copyWith(customerName: value),
-                          );
-                        },
-                      ),
-              ),
-              const SizedBox(width: 3),
-
               // Product Name
               SizedBox(
-                width: 146,
+                width: 280,
                 height: 32,
                 child: widget.item.itemCode.isEmpty
                     ? _buildItemSearchField()
@@ -398,73 +348,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildCustomerSearchField() {
-    return RawAutocomplete<CustomerMasterData>(
-      focusNode: _customerSearchFocusNode,
-      textEditingController: _customerSearchController,
-      optionsBuilder: (TextEditingValue textEditingValue) {
-        if (widget.isLoadingCustomers) return const Iterable.empty();
-
-        return widget.allCustomers.where((customer) {
-          if (textEditingValue.text.isEmpty) return true;
-          final searchTerm = textEditingValue.text.toLowerCase();
-          return customer.customerName.toLowerCase().contains(searchTerm) ||
-              customer.mobileNumber.toLowerCase().contains(searchTerm);
-        });
-      },
-      onSelected: _handleCustomerChange,
-      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-        return TextFormField(
-          controller: controller,
-          focusNode: focusNode,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            hintText: 'SEARCH CUSTOMER...',
-            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            isDense: true,
-          ),
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-        );
-      },
-      optionsViewBuilder: (context, onSelected, options) {
-        return Material(
-          elevation: 4.0,
-          child: SizedBox(
-            height: 180,
-            child: widget.isLoadingCustomers
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    padding: EdgeInsets.zero,
-                    itemCount: options.length,
-                    itemBuilder: (context, index) {
-                      final customer = options.elementAt(index);
-                      return Container(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Colors.grey.shade800),
-                          ),
-                        ),
-                        child: ListTile(
-                          dense: true,
-                          visualDensity: const VisualDensity(vertical: -4),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8.0,
-                          ),
-                          title: Text(
-                            '${customer.customerName} - ${customer.mobileNumber}',
-                            style: const TextStyle(fontSize: 13, height: 1.1),
-                          ),
-                          onTap: () => onSelected(customer),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        );
-      },
     );
   }
 

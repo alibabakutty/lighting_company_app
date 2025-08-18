@@ -21,6 +21,7 @@ class CustomerMaster extends StatefulWidget {
 class _CustomerMasterState extends State<CustomerMaster> {
   final FirebaseService firebaseService = FirebaseService();
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _customerCodeController = TextEditingController();
   final TextEditingController _customerNameController = TextEditingController();
   final TextEditingController _mobileNumberController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -51,8 +52,8 @@ class _CustomerMasterState extends State<CustomerMaster> {
         setState(() {
           _customerMasterData = data;
           _customerNameController.text = data.customerName;
-          _mobileNumberController.text = data.mobileNumber;
-          _emailController.text = data.email;
+          _mobileNumberController.text = data.mobileNumber ?? '';
+          _emailController.text = data.email ?? '';
         });
       } else {
         if (mounted) {
@@ -78,6 +79,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
     setState(() => _isSubmitting = true);
     try {
       final customerData = CustomerMasterData(
+        customerCode: _customerCodeController.text,
         customerName: _customerNameController.text,
         mobileNumber: _mobileNumberController.text,
         email: _emailController.text,
@@ -200,6 +202,21 @@ class _CustomerMasterState extends State<CustomerMaster> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
+                      // Customer Code Field
+                      CompactFormField(
+                        controller: _customerCodeController,
+                        label: 'Customer Code',
+                        icon: Icons.code,
+                        isReadOnly: widget.isDisplayMode || _isEditing,
+                        fieldWidth: 0.53,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter customer code';
+                          }
+                          return null;
+                        },
+                      ),
+
                       // Customer Name Field
                       CompactFormField(
                         controller: _customerNameController,

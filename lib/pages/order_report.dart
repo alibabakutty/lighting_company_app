@@ -176,6 +176,7 @@ class _OrderReportState extends State<OrderReport> {
         debugPrint('File exists, size: ${file.lengthSync()} bytes');
         await OpenFile.open(filePath);
         ScaffoldMessenger.of(
+          // ignore: use_build_context_synchronously
           context,
         ).showSnackBar(SnackBar(content: Text('Report saved to $filePath')));
       } else {
@@ -186,6 +187,7 @@ class _OrderReportState extends State<OrderReport> {
       debugPrint('Error: $e');
       debugPrint('Stack trace: $stackTrace');
       ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
         context,
       ).showSnackBar(SnackBar(content: Text('Export failed: ${e.toString()}')));
     }

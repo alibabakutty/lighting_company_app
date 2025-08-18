@@ -78,10 +78,46 @@ class _ImportCustomerState extends State<ImportCustomer> {
       final decoder = SpreadsheetDecoder.decodeBytes(bytes, update: true);
       final table = decoder.tables.values.first;
 
-      if (table.rows.length <= 1) {
+      if (table.rows.isEmpty) {
         setState(() {
           _isLoading = false;
-          _statusMessage = 'No data found in Excel sheet (only header row)';
+          _statusMessage = 'Excel file is empty';
+          _hasError = true;
+        });
+        return;
+      }
+
+      // Get headers (first row) and convert to lowercase for case-insensitive matching
+      final headers = table.rows[0]
+          .map((e) => e?.toString().toLowerCase().trim() ?? '')
+          .toList();
+
+      // Find column indexes - only Customer Code and Name are required
+      int? codeCol, nameCol, mobileCol, emailCol, dateCol;
+
+      for (int i = 0; i < headers.length; i++) {
+        final header = headers[i];
+        if (header.contains('customer code') || header.contains('cust code')) {
+          codeCol = i;
+        } else if (header.contains('customer name') ||
+            header.contains('cust name')) {
+          nameCol = i;
+        } else if (header.contains('mobile') || header.contains('phone')) {
+          mobileCol = i;
+        } else if (header.contains('email')) {
+          emailCol = i;
+        } else if (header.contains('created') || header.contains('date')) {
+          dateCol = i;
+        }
+      }
+
+      // Validate required columns exist
+      if (codeCol == null || nameCol == null) {
+        setState(() {
+          _isLoading = false;
+          _statusMessage =
+              'Required columns not found. Your Excel must contain: '
+              '"Customer Code" and "Customer Name" columns';
           _hasError = true;
         });
         return;
@@ -93,47 +129,58 @@ class _ImportCustomerState extends State<ImportCustomer> {
       for (int i = 1; i < table.rows.length; i++) {
         try {
           final row = table.rows[i];
-          if (row.length < 3) {
-            // At least customer name, mobile, and email
+
+          // Skip empty rows
+          if (row.isEmpty ||
+              row.every(
+                (cell) => cell == null || cell.toString().trim().isEmpty,
+              )) {
+            continue;
+          }
+
+          // Get values - only code and name are required
+          final customerCode = _parseString(row[codeCol]);
+          final customerName = _parseString(row[nameCol]);
+
+          // Skip if required fields are empty
+          if (customerCode.isEmpty || customerName.isEmpty) {
             _errorCount++;
             continue;
           }
 
-          final customerName = _parseString(row[0]);
-          if (customerName.isEmpty) {
-            _errorCount++;
-            continue;
-          }
+          // Optional fields
+          final mobileNumber = mobileCol != null && mobileCol < row.length
+              ? _parseString(row[mobileCol])
+              : null;
 
-          final mobileNumber = _parseString(row[1]);
-          if (mobileNumber.isEmpty) {
-            _errorCount++;
-            continue;
-          }
+          final email = emailCol != null && emailCol < row.length
+              ? _parseString(row[emailCol])
+              : null;
 
-          final email = row.length > 2 ? _parseString(row[2]) : '';
-          final createdAt = row.length > 3 && row[3] != null
-              ? _parseTimestamp(row[3].toString())
+          final createdAt =
+              dateCol != null && dateCol < row.length && row[dateCol] != null
+              ? _parseTimestamp(row[dateCol].toString())
               : Timestamp.now();
 
           final customer = CustomerMasterData(
+            customerCode: customerCode,
             customerName: customerName,
-            mobileNumber: mobileNumber,
-            email: email,
+            mobileNumber: mobileNumber?.isNotEmpty == true
+                ? mobileNumber
+                : null,
+            email: email?.isNotEmpty == true ? email : null,
             createdAt: createdAt,
           );
 
-          // Using customer name as document ID (you might want to use a different unique identifier)
-          String sanitizedId(String input) {
-            return input.replaceAll(RegExp(r'[\/\.\$#\[\]]'), '_');
-          }
+          // Create document ID
+          final docId = '${customerCode}_${customerName}'
+              .replaceAll(RegExp(r'[\/\.\$#\[\]\s]'), '_')
+              .toLowerCase();
 
-          batch.set(
-            collectionRef.doc(sanitizedId(customerName)),
-            customer.toFirestore(),
-          );
+          batch.set(collectionRef.doc(docId), customer.toFirestore());
           _successCount++;
 
+          // Update progress
           if (i % 10 == 0 || i == table.rows.length - 1) {
             setState(() {
               _statusMessage = 'Processing row $i/${table.rows.length - 1}...';
@@ -156,7 +203,7 @@ class _ImportCustomerState extends State<ImportCustomer> {
 Import completed!
 Successful: $_successCount
 Failed: $_errorCount
-Total: ${table.rows.length - 1}''';
+Total processed: ${table.rows.length - 1}''';
         _hasError = _errorCount > 0;
       });
     } catch (e) {
@@ -232,8 +279,9 @@ Total: ${table.rows.length - 1}''';
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Text('• Customer Code (required)'),
                           Text('• Customer Name (required)'),
-                          Text('• Mobile Number (required)'),
+                          Text('• Mobile Number (optional)'),
                           Text('• Email (optional)'),
                           Text('• Created At (optional date)'),
                         ],

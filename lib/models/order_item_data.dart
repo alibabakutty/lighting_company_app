@@ -1,5 +1,4 @@
 class OrderItem {
-  final String customerName; // Added customerName field
   final String itemCode;
   final String itemName;
   final double quantity;
@@ -12,7 +11,6 @@ class OrderItem {
   final double itemNetAmount;
 
   OrderItem({
-    required this.customerName, // Default to empty string if not provided
     required this.itemCode,
     required this.itemName,
     required this.quantity,
@@ -27,7 +25,6 @@ class OrderItem {
 
   // Empty constructor with default quantity 1
   factory OrderItem.empty() => OrderItem(
-    customerName: '', // Default to empty string
     itemCode: '',
     itemName: '',
     quantity: 1.0,
@@ -42,7 +39,6 @@ class OrderItem {
 
   // CopyWith method for immutable updates
   OrderItem copyWith({
-    String? customerName,
     String? itemCode,
     String? itemName,
     double? quantity,
@@ -55,9 +51,6 @@ class OrderItem {
     double? itemNetAmount,
   }) {
     return OrderItem(
-      customerName:
-          customerName ??
-          this.customerName, // Preserve the original customerName
       itemCode: itemCode ?? this.itemCode,
       itemName: itemName ?? this.itemName,
       uom: uom ?? this.uom,
@@ -76,7 +69,6 @@ class OrderItem {
   // Convert to Map for serialization
   Map<String, dynamic> toFirestore() {
     return {
-      'customerName': customerName, // Include customerName in serialization
       'itemCode': itemCode,
       'itemName': itemName,
       'quantity': quantity,
@@ -93,7 +85,6 @@ class OrderItem {
   // Create from Map for deserialization
   static OrderItem fromFirestore(Map<String, dynamic> map) {
     return OrderItem(
-      customerName: map['customerName'],
       itemCode: map['itemCode'] ?? '',
       itemName: map['itemName'] ?? '',
       quantity: map['quantity']?.toDouble() ?? 0.0,
@@ -112,7 +103,6 @@ class OrderItem {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is OrderItem &&
-        customerName == other.customerName &&
         other.itemCode == itemCode &&
         other.itemName == itemName &&
         other.quantity == quantity &&
@@ -129,7 +119,6 @@ class OrderItem {
   @override
   int get hashCode {
     return Object.hash(
-      customerName,
       itemCode.hashCode,
       itemName.hashCode,
       quantity.hashCode,
@@ -147,7 +136,6 @@ class OrderItem {
   @override
   String toString() {
     return 'OrderItem('
-        'customerName: $customerName, '
         'itemCode: $itemCode, '
         'itemName: $itemName, '
         'quantity: $quantity, '
