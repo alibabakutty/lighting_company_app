@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lighting_company_app/models/customer_master_data.dart';
 import 'package:lighting_company_app/models/item_master_data.dart';
 import 'package:lighting_company_app/models/order_item_data.dart';
 
 class OrderItemRow extends StatefulWidget {
   final int index;
   final OrderItem item;
-  final List<CustomerMasterData> allCustomers;
   final List<ItemMasterData> allItems;
-  final bool isLoadingCustomers;
   final bool isLoadingItems;
   final Function(int) onRemove;
   final Function(int, OrderItem) onUpdate;
-  final VoidCallback onCustomerSelected;
   final VoidCallback onItemSelected;
   final VoidCallback onAddNewRow;
 
@@ -21,13 +17,10 @@ class OrderItemRow extends StatefulWidget {
     super.key,
     required this.index,
     required this.item,
-    required this.allCustomers,
     required this.allItems,
-    required this.isLoadingCustomers,
     required this.isLoadingItems,
     required this.onRemove,
     required this.onUpdate,
-    required this.onCustomerSelected,
     required this.onItemSelected,
     required this.onAddNewRow,
   });
@@ -38,7 +31,6 @@ class OrderItemRow extends StatefulWidget {
 
 class _OrderItemRowState extends State<OrderItemRow> {
   late FocusNode _itemSearchFocusNode;
-  late TextEditingController _customerNameController;
   late TextEditingController _itemNameController;
   final TextEditingController _itemSearchController = TextEditingController();
   late TextEditingController _quantityController;
@@ -110,7 +102,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
     _quantityController.dispose();
     _uomController.dispose();
     _netAmountController.dispose();
-    _customerNameController.dispose();
     _itemNameController.dispose();
     _itemSearchController.dispose();
     _itemSearchFocusNode.dispose();

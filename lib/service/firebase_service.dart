@@ -65,9 +65,15 @@ class FirebaseService {
     required double totalCalculationAmount,
     required String userName,
     String? customerId, // Add optional customerId parameter for admin/executive
+    required String customerName,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
+
+    // Additional validation for customerName
+    if (customerName.isEmpty) {
+      throw ArgumentError('Customer name cannot be empty');
+    }
 
     try {
       // Determine the customer ID - use provided one or current user's UID
@@ -77,6 +83,7 @@ class FirebaseService {
       final orderData = {
         'order_number': orderNumber,
         'customerId': orderCustomerId, // Use determined customer ID
+        'customer_name': customerName,
         'username': userName,
         'total_quantity': totalQty,
         'total_calculation_amount': totalCalculationAmount,
@@ -165,13 +172,29 @@ class FirebaseService {
     return null;
   }
 
-  // fetch tablemasterdata by tablenumber
+  // fetch customermasterdata by customername
   Future<CustomerMasterData?> getCustomerByCustomerName(
     String customerName,
   ) async {
     final snapshot = await FirebaseFirestore.instance
         .collection('customer_master_data')
         .where('customer_name', isEqualTo: customerName)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      return CustomerMasterData.fromfirestore(snapshot.docs.first.data());
+    }
+    return null;
+  }
+
+  // fetch customermasterdata by customercode
+  Future<CustomerMasterData?> getCustomerByCustomerCode(
+    String customerCode,
+  ) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('customer_master_data')
+        .where('customer_code', isEqualTo: customerCode)
         .limit(1)
         .get();
 

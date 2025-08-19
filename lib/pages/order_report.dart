@@ -55,7 +55,7 @@ class _OrderReportState extends State<OrderReport> {
       ),
       TextCellValue(order['order_number']?.toString() ?? 'N/A'),
       TextCellValue(order['username'] ?? 'N/A'),
-      TextCellValue(item?['customerName']?.toString() ?? 'N/A'),
+      TextCellValue(order['customer_name']?.toString() ?? 'N/A'),
       TextCellValue(item?['itemCode']?.toString() ?? 'N/A'),
       TextCellValue(item?['itemName']?.toString() ?? 'N/A'),
       DoubleCellValue(item?['quantity']?.toDouble() ?? 0.0),
@@ -569,7 +569,7 @@ class _OrderReportState extends State<OrderReport> {
               // Customer Name (new column)
               DataCell(
                 _buildCell(
-                  item?['customerName']?.toString() ?? 'N/A',
+                  order['customer_name']?.toString() ?? 'N/A',
                   cellTextStyle,
                   Alignment.centerLeft,
                 ),

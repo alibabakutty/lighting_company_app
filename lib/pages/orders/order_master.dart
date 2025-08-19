@@ -8,6 +8,7 @@ import 'package:lighting_company_app/models/item_master_data.dart';
 import 'package:lighting_company_app/models/order_item_data.dart';
 import 'package:lighting_company_app/pages/orders/order_item_row.dart';
 import 'package:lighting_company_app/pages/orders/order_utils.dart';
+import 'package:lighting_company_app/pages/orders/utils/compact_customer_dropdown.dart';
 import 'package:lighting_company_app/service/firebase_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -241,11 +242,13 @@ class _OrderMasterState extends State<OrderMaster> {
 
         // For admin/executive: Get selected customer if available
         String? selectedCustomerId;
+        String selectedCustomerName = '';
         if (_currentUser?.isAdmin ?? false || _currentUser!.isExecutive) {
           // Assuming you have a way to select customer in your UI
           // For example, if you have a dropdown with _allCustomers
           selectedCustomerId =
               _selectedCustomer?.id; // You'll need to implement this
+          selectedCustomerName = _selectedCustomer?.customerName ?? '';
         }
 
         final success = await FirebaseService().addOrderMasterData(
@@ -258,6 +261,7 @@ class _OrderMasterState extends State<OrderMaster> {
               _currentUser?.username ??
               'Unknown User',
           customerId: selectedCustomerId, // Pass null for regular customers
+          customerName: selectedCustomerName,
         );
 
         if (success) {
@@ -391,8 +395,23 @@ class _OrderMasterState extends State<OrderMaster> {
           key: _formKey,
           child: Column(
             children: [
+              // Customer Selection Dropdown
+              if (_currentUser != null &&
+                  (_currentUser!.isAdmin || _currentUser!.isExecutive))
+                CompactCustomerDropdown(
+                  value: _selectedCustomer,
+                  items: _allCustomers,
+                  label: 'Customer',
+                  isReadOnly: false,
+                  onChanged: (CustomerMasterData? newValue) {
+                    setState(() {
+                      _selectedCustomer = newValue;
+                    });
+                  },
+                  fieldWidth: 0.7,
+                ),
+
               // Order Items Section
-              const SizedBox(height: 2),
               Expanded(
                 child: Card(
                   elevation: 2,
@@ -471,9 +490,9 @@ class _OrderMasterState extends State<OrderMaster> {
                                     OrderItemRow(
                                       index: i,
                                       item: orderItems[i],
-                                      allCustomers: _allCustomers,
+                                      // allCustomers: _allCustomers,
                                       allItems: _allItems,
-                                      isLoadingCustomers: _isLoading,
+                                      // isLoadingCustomers: _isLoading,
                                       isLoadingItems: _isLoadingItems,
                                       onRemove: (index) => setState(
                                         () => orderItems.removeAt(index),
@@ -505,7 +524,7 @@ class _OrderMasterState extends State<OrderMaster> {
                                           );
                                         }
                                       }),
-                                      onCustomerSelected: () {},
+                                      // onCustomerSelected: () {},
                                       onAddNewRow: _addNewRow,
                                     ),
                                 ],
