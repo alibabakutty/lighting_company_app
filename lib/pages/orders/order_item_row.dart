@@ -363,7 +363,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
           focusNode: focusNode,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
-            hintText: 'SEARCH BY CODE/NAME',
+            hintText: '',
             contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             isDense: true,
           ),

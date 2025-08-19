@@ -173,7 +173,7 @@ class _ImportCustomerState extends State<ImportCustomer> {
           );
 
           // Create document ID
-          final docId = '${customerCode}_${customerName}'
+          final docId = '${customerCode}_$customerName'
               .replaceAll(RegExp(r'[\/\.\$#\[\]\s]'), '_')
               .toLowerCase();
 

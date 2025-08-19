@@ -8,7 +8,7 @@ import 'package:lighting_company_app/models/item_master_data.dart';
 import 'package:lighting_company_app/models/order_item_data.dart';
 import 'package:lighting_company_app/pages/orders/order_item_row.dart';
 import 'package:lighting_company_app/pages/orders/order_utils.dart';
-import 'package:lighting_company_app/pages/orders/utils/compact_customer_dropdown.dart';
+import 'package:lighting_company_app/pages/orders/utils/customer_input_field.dart';
 import 'package:lighting_company_app/service/firebase_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,6 +26,7 @@ class _OrderMasterState extends State<OrderMaster> {
   List<OrderItem> orderItems = [OrderItemExtension.empty()];
 
   final _formKey = GlobalKey<FormState>();
+  final _customerNameController = TextEditingController();
   final _quantityController = TextEditingController();
 
   final FirebaseService _firebaseService = FirebaseService();
@@ -117,7 +118,7 @@ class _OrderMasterState extends State<OrderMaster> {
     }
     _orderCounter++;
     _saveOrderCounter();
-    return 'DINE-${_orderCounter.toString().padLeft(4, '0')}';
+    return 'DIST.ORDER-${_orderCounter.toString().padLeft(4, '0')}';
   }
 
   void _addNewRow() {
@@ -395,20 +396,25 @@ class _OrderMasterState extends State<OrderMaster> {
           key: _formKey,
           child: Column(
             children: [
-              // Customer Selection Dropdown
+              // Customer Selection input field
               if (_currentUser != null &&
                   (_currentUser!.isAdmin || _currentUser!.isExecutive))
-                CompactCustomerDropdown(
-                  value: _selectedCustomer,
-                  items: _allCustomers,
+                CustomerInputField(
+                  controller: _customerNameController,
                   label: 'Customer',
-                  isReadOnly: false,
-                  onChanged: (CustomerMasterData? newValue) {
+                  fieldWidth: 0.7,
+                  allCustomers: _allCustomers,
+                  isLoadingCustomers: _isLoading,
+                  onCustomerSelected: (customer) {
                     setState(() {
-                      _selectedCustomer = newValue;
+                      _selectedCustomer = customer;
                     });
                   },
-                  fieldWidth: 0.7,
+                  onCustomerCleared: () {
+                    setState(() {
+                      _selectedCustomer = null;
+                    });
+                  },
                 ),
 
               // Order Items Section
