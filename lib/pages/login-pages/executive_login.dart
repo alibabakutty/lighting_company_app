@@ -98,18 +98,6 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
         }
 
         // Step 2: Verify if within authorized area
-        // bool isAuthorized = await LocationService.isWithinAuthorizedArea(
-        //   _loginPosition!,
-        // );
-        // if (!isAuthorized) {
-        //   setState(() {
-        //     _locationError =
-        //         'Login only allowed from authorized company locations';
-        //     _isLoading = false;
-        //     _isLocationLoading = false;
-        //   });
-        //   return;
-        // }
 
         // Step 3: Get address for display
         _locationAddress = await LocationService.getAddressFromPosition(
@@ -182,7 +170,6 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Executive Login'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
@@ -217,6 +204,7 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Colors.grey[600],
                       fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
@@ -229,7 +217,10 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
                   onPressed: () => setState(
                     () => _showCredentialsHistory = !_showCredentialsHistory,
                   ),
-                  child: const Text('Show previous credentials'),
+                  child: const Text(
+                    'Show previous credentials',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
                 ),
                 if (_showCredentialsHistory) ...[
                   const SizedBox(height: 10),
@@ -273,6 +264,7 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
                     // Email field
                     TextFormField(
                       controller: _emailController,
+                      style: TextStyle(fontSize: 18),
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         labelText: 'Executive ID',
@@ -280,6 +272,10 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
                         prefixIcon: const Icon(Icons.email_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
                       ),
                       validator: (value) {
@@ -298,6 +294,7 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
                     // Password field
                     TextFormField(
                       controller: _passwordController,
+                      style: TextStyle(fontSize: 18),
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         labelText: 'Password',
@@ -317,6 +314,10 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
                       ),
                       validator: (value) {
@@ -408,8 +409,9 @@ class _ExecutiveLoginState extends State<ExecutiveLogin> {
                             : const Text(
                                 'Sign In',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 18,
                                   color: Colors.white,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                       ),

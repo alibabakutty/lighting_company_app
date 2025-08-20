@@ -242,14 +242,31 @@ class _OrderMasterState extends State<OrderMaster> {
         }
 
         // For admin/executive: Get selected customer if available
-        String? selectedCustomerId;
-        String selectedCustomerName = '';
+        String selectedCustomerCode;
+        String selectedCustomerName;
+
         if (_currentUser?.isAdmin ?? false || _currentUser!.isExecutive) {
-          // Assuming you have a way to select customer in your UI
-          // For example, if you have a dropdown with _allCustomers
-          selectedCustomerId =
-              _selectedCustomer?.id; // You'll need to implement this
-          selectedCustomerName = _selectedCustomer?.customerName ?? '';
+          // For admin/executive: use selected customer or current user's name
+          selectedCustomerCode = _selectedCustomer!.customerCode;
+          selectedCustomerName = _selectedCustomer!.customerName;
+        } else {
+          // For regular customers: use their own information
+          selectedCustomerCode = user.uid;
+          selectedCustomerName =
+              _currentUser?.executiveName ??
+              _currentUser?.username ??
+              'Customer';
+        }
+
+        // Validate customer name is not empty
+        if (selectedCustomerName.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Customer name cannot be empty'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
         }
 
         final success = await FirebaseService().addOrderMasterData(
@@ -261,7 +278,7 @@ class _OrderMasterState extends State<OrderMaster> {
               _currentUser?.executiveName ??
               _currentUser?.username ??
               'Unknown User',
-          customerId: selectedCustomerId, // Pass null for regular customers
+          customerCode: selectedCustomerCode, // Pass null for regular customers
           customerName: selectedCustomerName,
         );
 
@@ -280,6 +297,8 @@ class _OrderMasterState extends State<OrderMaster> {
           setState(() {
             orderItems = [OrderItemExtension.empty()];
             _quantityController.clear();
+            _selectedCustomer = null; // Reset selected customer
+            _customerNameController.clear(); // clear customer input field
           });
         } else {
           // ignore: use_build_context_synchronously

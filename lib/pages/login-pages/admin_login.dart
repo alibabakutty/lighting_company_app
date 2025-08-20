@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:lighting_company_app/authentication/auth_exception.dart';
+import 'package:lighting_company_app/authentication/auth_models.dart';
 import 'package:lighting_company_app/authentication/auth_provider.dart';
 import 'package:lighting_company_app/service/location_service.dart';
 import 'package:provider/provider.dart';
@@ -101,15 +102,6 @@ class _AdminLoginState extends State<AdminLogin> {
         }
 
         // Step 2: Verify if within authorized area
-        // bool isAuthorized = await LocationService.isWithinAuthorizedArea(_loginPosition!);
-        // if (!isAuthorized) {
-        //   setState(() {
-        //     _locationError = 'Login only allowed from authorized company locations';
-        //     _isLoading = false;
-        //     _isLocationLoading = false;
-        //   });
-        //   return;
-        // }
 
         // Step 3: Get address for display
         _locationAddress = await LocationService.getAddressFromPosition(
@@ -125,16 +117,50 @@ class _AdminLoginState extends State<AdminLogin> {
         // Step 5: Proceed with authentication
         // ignore: use_build_context_synchronously
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        await authProvider.adminSignIn(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-          loginLocation: loginLocation,
-        );
 
-        await _saveCredentials();
+        if (_isSignUp) {
+          // create new admin account
+          final signUpData = AdminSignUpData(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+            username: _usernameController.text.trim(),
+          );
 
-        if (mounted) {
-          context.go('/admin_dashboard');
+          await authProvider.createAdminAccount(signUpData);
+
+          // After creating account, automatically signin
+          await authProvider.adminSignIn(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+            loginLocation: loginLocation,
+          );
+
+          await _saveCredentials();
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Admin account created successfully!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+
+            // navigate to admin dashboard
+            context.go('/admin_dashboard');
+          }
+        } else {
+          // Sign in to existing account
+          await authProvider.adminSignIn(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+            loginLocation: loginLocation,
+          );
+
+          await _saveCredentials();
+
+          if (mounted) {
+            context.go('/admin_dashboard');
+          }
         }
       } on AuthException catch (e) {
         if (mounted) {
@@ -199,7 +225,10 @@ class _AdminLoginState extends State<AdminLogin> {
                 _isSignUp
                     ? 'Create a new admin account'
                     : 'Sign in to access admin dashboard',
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 30),
 
@@ -209,7 +238,10 @@ class _AdminLoginState extends State<AdminLogin> {
                   onPressed: () => setState(
                     () => _showCredentialsHistory = !_showCredentialsHistory,
                   ),
-                  child: const Text('Show previous credentials'),
+                  child: const Text(
+                    'Show previous credentials',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
                 ),
                 if (_showCredentialsHistory) ...[
                   const SizedBox(height: 10),
@@ -253,11 +285,17 @@ class _AdminLoginState extends State<AdminLogin> {
                     if (_isSignUp) ...[
                       TextFormField(
                         controller: _usernameController,
+                        style: TextStyle(fontSize: 18),
                         decoration: InputDecoration(
                           labelText: 'Admin Username',
+                          labelStyle: TextStyle(fontSize: 16),
                           prefixIcon: const Icon(Icons.person_outlined),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
                           ),
                         ),
                         validator: (value) => value?.isEmpty ?? true
@@ -268,12 +306,18 @@ class _AdminLoginState extends State<AdminLogin> {
                     ],
                     TextFormField(
                       controller: _emailController,
+                      style: TextStyle(fontSize: 18),
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         labelText: 'Admin Email',
+                        labelStyle: TextStyle(fontSize: 16),
                         prefixIcon: const Icon(Icons.email_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
                       ),
                       validator: (value) {
@@ -291,9 +335,11 @@ class _AdminLoginState extends State<AdminLogin> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _passwordController,
+                      style: TextStyle(fontSize: 18),
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         labelText: 'Password',
+                        labelStyle: TextStyle(fontSize: 16),
                         prefixIcon: const Icon(Icons.lock_outlined),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -307,6 +353,10 @@ class _AdminLoginState extends State<AdminLogin> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
                       ),
                       validator: (value) {
@@ -387,7 +437,13 @@ class _AdminLoginState extends State<AdminLogin> {
                       ),
                       child: _isLoading
                           ? const CircularProgressIndicator()
-                          : Text(_isSignUp ? 'Create Admin' : 'Sign In'),
+                          : Text(
+                              _isSignUp ? 'Create Admin' : 'Sign In',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ],
                 ),
@@ -400,10 +456,17 @@ class _AdminLoginState extends State<AdminLogin> {
                     _isSignUp
                         ? "Already have an admin account?"
                         : "Need to create an admin account?",
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   TextButton(
                     onPressed: _toggleSignUp,
-                    child: Text(_isSignUp ? 'Sign In' : 'Create Account'),
+                    child: Text(
+                      _isSignUp ? 'Sign In' : 'Create Account',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),

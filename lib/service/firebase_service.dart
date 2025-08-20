@@ -64,7 +64,7 @@ class FirebaseService {
     required double totalQty,
     required double totalCalculationAmount,
     required String userName,
-    String? customerId, // Add optional customerId parameter for admin/executive
+    required String customerCode,
     required String customerName,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -77,12 +77,12 @@ class FirebaseService {
 
     try {
       // Determine the customer ID - use provided one or current user's UID
-      final orderCustomerId = customerId ?? user.uid;
+      final orderCustomerCode = customerCode;
 
       // Create the order document
       final orderData = {
         'order_number': orderNumber,
-        'customerId': orderCustomerId, // Use determined customer ID
+        'customer_id': orderCustomerCode, // Use determined customer code
         'customer_name': customerName,
         'username': userName,
         'total_quantity': totalQty,
