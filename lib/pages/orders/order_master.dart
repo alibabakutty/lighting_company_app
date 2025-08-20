@@ -28,12 +28,14 @@ class _OrderMasterState extends State<OrderMaster> {
   final _formKey = GlobalKey<FormState>();
   final _customerNameController = TextEditingController();
   final _quantityController = TextEditingController();
+  late FocusNode _customerFocusNode = FocusNode();
 
   final FirebaseService _firebaseService = FirebaseService();
   List<CustomerMasterData> _allCustomers = [];
   List<ItemMasterData> _allItems = [];
   CustomerMasterData? _selectedCustomer;
   bool _isLoadingItems = false;
+  bool _hasShownNotification = false;
 
   // order number tracking
   int _orderCounter = 0;
@@ -62,10 +64,38 @@ class _OrderMasterState extends State<OrderMaster> {
   @override
   void initState() {
     super.initState();
+    // Initialize the focus node
+    _customerFocusNode = FocusNode();
     _loadOrderCounter();
     _fetchUserData();
     _loadAllCustomers();
     _loadAllItems();
+
+    // Request focus on customer field after a short delay
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted &&
+            _customerFocusNode.canRequestFocus &&
+            !_hasShownNotification) {
+          _customerFocusNode.requestFocus();
+
+          // show notification message after focusing
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Please select a customer to continue',
+                style: TextStyle(fontSize: 16),
+              ),
+              backgroundColor: Colors.blue[700],
+              duration: Duration(seconds: 3),
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.all(20),
+            ),
+          );
+          _hasShownNotification = true;
+        }
+      });
+    });
   }
 
   bool _isDuplicateItem(String itemCode) {
@@ -420,6 +450,7 @@ class _OrderMasterState extends State<OrderMaster> {
                   (_currentUser!.isAdmin || _currentUser!.isExecutive))
                 CustomerInputField(
                   controller: _customerNameController,
+                  focusNode: _customerFocusNode,
                   label: 'Customer',
                   fieldWidth: 0.7,
                   allCustomers: _allCustomers,
@@ -471,25 +502,20 @@ class _OrderMasterState extends State<OrderMaster> {
                                 ),
                                 const SizedBox(width: 2),
                                 SizedBox(
-                                  width: 80,
-                                  child: Text('CUSTOMER', style: headerStyle),
+                                  width: 87,
+                                  child: Text('ITEM NAME', style: headerStyle),
                                 ),
-                                const SizedBox(width: 2),
-                                SizedBox(
-                                  width: 40,
-                                  child: Text('ITEM', style: headerStyle),
-                                ),
-                                const SizedBox(width: 2),
+                                const SizedBox(width: 4),
                                 SizedBox(
                                   width: 40,
                                   child: Text('QTY', style: headerStyle),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 8),
                                 SizedBox(
-                                  width: 40,
+                                  width: 60,
                                   child: Text('RATE', style: headerStyle),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 8),
                                 SizedBox(
                                   width: 90,
                                   child: Text('AMOUNT', style: headerStyle),
@@ -656,6 +682,7 @@ class _OrderMasterState extends State<OrderMaster> {
   @override
   void dispose() {
     _quantityController.dispose();
+    _customerFocusNode.dispose();
     super.dispose();
   }
 }

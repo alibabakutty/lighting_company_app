@@ -51,6 +51,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
       if (data != null) {
         setState(() {
           _customerMasterData = data;
+          _customerCodeController.text = data.customerCode;
           _customerNameController.text = data.customerName;
           _mobileNumberController.text = data.mobileNumber ?? '';
           _emailController.text = data.email ?? '';
@@ -142,6 +143,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
   }
 
   void _resetForm() {
+    _customerCodeController.clear();
     _customerNameController.clear();
     _mobileNumberController.clear();
     _emailController.clear();
@@ -158,6 +160,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
 
   @override
   void dispose() {
+    _customerCodeController.dispose();
     _customerNameController.dispose();
     _mobileNumberController.dispose();
     _emailController.dispose();
