@@ -3,7 +3,6 @@ import 'package:lighting_company_app/models/customer_master_data.dart';
 
 class CustomerInputField extends StatefulWidget {
   final TextEditingController controller;
-  final FocusNode focusNode;
   final String label;
   final String? hint;
   final TextInputType? keyboardType;
@@ -18,7 +17,6 @@ class CustomerInputField extends StatefulWidget {
   const CustomerInputField({
     super.key,
     required this.controller,
-    required this.focusNode,
     required this.label,
     this.hint,
     this.keyboardType,
@@ -220,7 +218,6 @@ class _CustomerInputFieldState extends State<CustomerInputField> {
       height: 30,
       child: TextFormField(
         controller: widget.controller,
-        focusNode: widget.focusNode,
         readOnly: true,
         decoration: InputDecoration(
           isDense: true,

@@ -27,29 +27,29 @@ class CdaPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Create Button
-              _buildActionButton(
-                context: context,
-                icon: Icons.add,
-                label: 'Create',
-                color: Colors.green.shade600,
-                onPressed: () {
-                  switch (masterType) {
-                    case 'item':
-                      context.go(
-                        '/item_master',
-                        extra: {'isDisplayMode': false},
-                      );
-                      break;
-                    case 'executive':
-                      context.go('/executive_master');
-                      break;
-                    case 'customer':
-                      context.go('/customer_master');
-                      break;
-                    default:
-                  }
-                },
-              ),
+              // _buildActionButton(
+              //   context: context,
+              //   icon: Icons.add,
+              //   label: 'Create',
+              //   color: Colors.green.shade600,
+              //   onPressed: () {
+              //     switch (masterType) {
+              //       case 'item':
+              //         context.go(
+              //           '/item_master',
+              //           extra: {'isDisplayMode': false},
+              //         );
+              //         break;
+              //       case 'executive':
+              //         context.go('/executive_master');
+              //         break;
+              //       case 'customer':
+              //         context.go('/customer_master');
+              //         break;
+              //       default:
+              //     }
+              //   },
+              // ),
               const SizedBox(height: 20),
               // Display Button
               _buildActionButton(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:lighting_company_app/models/item_master_data.dart';
 import 'package:lighting_company_app/models/order_item_data.dart';
 
@@ -191,12 +190,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: false,
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
                       ),
               ),
             ],
@@ -368,8 +361,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
             isDense: true,
           ),
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          keyboardType: TextInputType.numberWithOptions(decimal: false),
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         );
       },
       optionsViewBuilder: (context, onSelected, options) {

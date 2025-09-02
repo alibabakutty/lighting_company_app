@@ -41,7 +41,7 @@ class CompactDropdown extends StatelessWidget {
           SizedBox(
             width: MediaQuery.of(context).size.width * fieldWidth,
             child: DropdownButtonFormField<String>(
-              value: value,
+              initialValue: value,
               items: items.map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,

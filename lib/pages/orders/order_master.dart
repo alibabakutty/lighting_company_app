@@ -28,14 +28,12 @@ class _OrderMasterState extends State<OrderMaster> {
   final _formKey = GlobalKey<FormState>();
   final _customerNameController = TextEditingController();
   final _quantityController = TextEditingController();
-  late FocusNode _customerFocusNode = FocusNode();
 
   final FirebaseService _firebaseService = FirebaseService();
   List<CustomerMasterData> _allCustomers = [];
   List<ItemMasterData> _allItems = [];
   CustomerMasterData? _selectedCustomer;
   bool _isLoadingItems = false;
-  bool _hasShownNotification = false;
 
   // order number tracking
   int _orderCounter = 0;
@@ -64,38 +62,10 @@ class _OrderMasterState extends State<OrderMaster> {
   @override
   void initState() {
     super.initState();
-    // Initialize the focus node
-    _customerFocusNode = FocusNode();
     _loadOrderCounter();
     _fetchUserData();
     _loadAllCustomers();
     _loadAllItems();
-
-    // Request focus on customer field after a short delay
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted &&
-            _customerFocusNode.canRequestFocus &&
-            !_hasShownNotification) {
-          _customerFocusNode.requestFocus();
-
-          // show notification message after focusing
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Please select a customer to continue',
-                style: TextStyle(fontSize: 16),
-              ),
-              backgroundColor: Colors.blue[700],
-              duration: Duration(seconds: 3),
-              behavior: SnackBarBehavior.floating,
-              margin: EdgeInsets.all(20),
-            ),
-          );
-          _hasShownNotification = true;
-        }
-      });
-    });
   }
 
   bool _isDuplicateItem(String itemCode) {
@@ -271,32 +241,37 @@ class _OrderMasterState extends State<OrderMaster> {
           totalCalculationAmount += item.quantity * item.totalAmount;
         }
 
-        // For admin/executive: Get selected customer if available
-        String selectedCustomerCode;
-        String selectedCustomerName;
+        String selectedCustomerCode = '';
+        String selectedCustomerName = '';
 
-        if (_currentUser?.isAdmin ?? false || _currentUser!.isExecutive) {
-          // For admin/executive: use selected customer or current user's name
+        if (_currentUser?.isAdmin ?? false) {
+          if (_selectedCustomer == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please select a customer'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
+          selectedCustomerCode = _selectedCustomer!.customerCode;
+          selectedCustomerName = _selectedCustomer!.customerName;
+        } else if (_currentUser!.isExecutive) {
+          if (_selectedCustomer == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please select a customer'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
           selectedCustomerCode = _selectedCustomer!.customerCode;
           selectedCustomerName = _selectedCustomer!.customerName;
         } else {
-          // For regular customers: use their own information
+          // Regular customer login
           selectedCustomerCode = user.uid;
-          selectedCustomerName =
-              _currentUser?.executiveName ??
-              _currentUser?.username ??
-              'Customer';
-        }
-
-        // Validate customer name is not empty
-        if (selectedCustomerName.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Customer name cannot be empty'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return;
+          selectedCustomerName = _currentUser?.username ?? 'Customer';
         }
 
         final success = await FirebaseService().addOrderMasterData(
@@ -307,46 +282,49 @@ class _OrderMasterState extends State<OrderMaster> {
           userName:
               _currentUser?.executiveName ??
               _currentUser?.username ??
-              'Unknown User',
-          customerCode: selectedCustomerCode, // Pass null for regular customers
+              'Unknown',
+          customerCode: selectedCustomerCode,
           customerName: selectedCustomerName,
         );
 
         if (success) {
-          // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Order $_currentOrderNumber submitted successfully!',
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Order $_currentOrderNumber submitted successfully!',
+                ),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 3),
               ),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 3),
-            ),
-          );
+            );
+          }
 
           setState(() {
             orderItems = [OrderItemExtension.empty()];
             _quantityController.clear();
-            _selectedCustomer = null; // Reset selected customer
-            _customerNameController.clear(); // clear customer input field
+            _selectedCustomer = null;
+            _customerNameController.clear();
           });
         } else {
-          // ignore: use_build_context_synchronously
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to submit order. Please try again.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to submit order. Please try again.'),
+            SnackBar(
+              content: Text('Error submitting order: $e'),
               backgroundColor: Colors.red,
             ),
           );
         }
-      } catch (e) {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error submitting order: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     }
   }
@@ -450,7 +428,6 @@ class _OrderMasterState extends State<OrderMaster> {
                   (_currentUser!.isAdmin || _currentUser!.isExecutive))
                 CustomerInputField(
                   controller: _customerNameController,
-                  focusNode: _customerFocusNode,
                   label: 'Customer',
                   fieldWidth: 0.7,
                   allCustomers: _allCustomers,
@@ -682,7 +659,6 @@ class _OrderMasterState extends State<OrderMaster> {
   @override
   void dispose() {
     _quantityController.dispose();
-    _customerFocusNode.dispose();
     super.dispose();
   }
 }

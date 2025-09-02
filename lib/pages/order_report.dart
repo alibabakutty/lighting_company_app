@@ -326,7 +326,7 @@ class _OrderReportState extends State<OrderReport> {
             SizedBox(
               width: 100,
               child: DropdownButtonFormField<String>(
-                value: _useSpecificDate ? 'specific' : 'range',
+                initialValue: _useSpecificDate ? 'specific' : 'range',
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.symmetric(
