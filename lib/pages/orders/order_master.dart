@@ -421,235 +421,252 @@ class _OrderMasterState extends State<OrderMaster> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            children: [
-              // Customer Selection input field
-              if (_currentUser != null &&
-                  (_currentUser!.isAdmin || _currentUser!.isExecutive))
-                CustomerInputField(
-                  controller: _customerNameController,
-                  label: 'Customer',
-                  fieldWidth: 0.7,
-                  allCustomers: _allCustomers,
-                  isLoadingCustomers: _isLoading,
-                  onCustomerSelected: (customer) {
-                    setState(() {
-                      _selectedCustomer = customer;
-                    });
-                  },
-                  onCustomerCleared: () {
-                    setState(() {
-                      _selectedCustomer = null;
-                    });
-                  },
-                ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Column(
+                children: [
+                  // Customer Selection input field
+                  if (_currentUser != null &&
+                      (_currentUser!.isAdmin || _currentUser!.isExecutive))
+                    CustomerInputField(
+                      controller: _customerNameController,
+                      label: 'Customer',
+                      fieldWidth: 0.7,
+                      allCustomers: _allCustomers,
+                      isLoadingCustomers: _isLoading,
+                      onCustomerSelected: (customer) {
+                        setState(() {
+                          _selectedCustomer = customer;
+                        });
+                      },
+                      onCustomerCleared: () {
+                        setState(() {
+                          _selectedCustomer = null;
+                        });
+                      },
+                    ),
 
-              // Order Items Section
-              Expanded(
-                child: Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      children: [
-                        // **Table Header (Fixed - Scrolls Horizontally)**
-                        SingleChildScrollView(
-                          scrollDirection:
-                              Axis.horizontal, // Allow horizontal scroll
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 8.0,
-                              horizontal: 12.0,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.deepPurple[50],
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: Colors.deepPurple[500]!,
+                  // Add some spacing
+                  if (_currentUser != null &&
+                      (_currentUser!.isAdmin || _currentUser!.isExecutive))
+                    const SizedBox(height: 8),
+
+                  // Order Items Section with constrained height
+                  Expanded(
+                    child: Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          children: [
+                            // **Table Header (Fixed - Scrolls Horizontally)**
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8.0,
+                                  horizontal: 12.0,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.deepPurple[50],
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: Colors.deepPurple[500]!,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 30,
+                                      child: Text('NO.', style: headerStyle),
+                                    ),
+                                    const SizedBox(width: 2),
+                                    SizedBox(
+                                      width: 87,
+                                      child: Text(
+                                        'ITEM NAME',
+                                        style: headerStyle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    SizedBox(
+                                      width: 40,
+                                      child: Text('QTY', style: headerStyle),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    SizedBox(
+                                      width: 60,
+                                      child: Text('RATE', style: headerStyle),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    SizedBox(
+                                      width: 90,
+                                      child: Text('AMOUNT', style: headerStyle),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                ),
                               ),
                             ),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 30,
-                                  child: Text('NO.', style: headerStyle),
-                                ),
-                                const SizedBox(width: 2),
-                                SizedBox(
-                                  width: 87,
-                                  child: Text('ITEM NAME', style: headerStyle),
-                                ),
-                                const SizedBox(width: 4),
-                                SizedBox(
-                                  width: 40,
-                                  child: Text('QTY', style: headerStyle),
-                                ),
-                                const SizedBox(width: 8),
-                                SizedBox(
-                                  width: 60,
-                                  child: Text('RATE', style: headerStyle),
-                                ),
-                                const SizedBox(width: 8),
-                                SizedBox(
-                                  width: 90,
-                                  child: Text('AMOUNT', style: headerStyle),
-                                ),
-                                const SizedBox(width: 8),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
+                            const SizedBox(height: 8),
 
-                        // **Scrollable Order Items (Vertical + Horizontal)**
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection:
-                                Axis.vertical, // Primary scroll (vertical)
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis
-                                  .horizontal, // Secondary scroll (horizontal)
-                              child: Column(
+                            // **Scrollable Order Items (Vertical + Horizontal)**
+                            Expanded(
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.vertical,
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Column(
+                                    children: [
+                                      for (
+                                        int i = 0;
+                                        i < orderItems.length;
+                                        i++
+                                      )
+                                        OrderItemRow(
+                                          index: i,
+                                          item: orderItems[i],
+                                          allItems: _allItems,
+                                          isLoadingItems: _isLoadingItems,
+                                          onRemove: (index) => setState(
+                                            () => orderItems.removeAt(index),
+                                          ),
+                                          onUpdate: (index, updatedItem) {
+                                            setState(
+                                              () => orderItems[index] =
+                                                  updatedItem,
+                                            );
+                                            if (_isDuplicateItem(
+                                              updatedItem.itemCode,
+                                            )) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    'Item "${updatedItem.itemName}" already added. And this is additional quantity!',
+                                                  ),
+                                                  backgroundColor: Colors.blue,
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          onItemSelected: () => setState(() {
+                                            if (i == orderItems.length - 1 &&
+                                                orderItems[i]
+                                                    .itemCode
+                                                    .isNotEmpty) {
+                                              orderItems.add(
+                                                OrderItemExtension.empty(),
+                                              );
+                                            }
+                                          }),
+                                          onAddNewRow: _addNewRow,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // **Totals (Fixed at Bottom)**
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.deepPurple[50],
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: Colors.deepPurple[100]!,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  for (int i = 0; i < orderItems.length; i++)
-                                    OrderItemRow(
-                                      index: i,
-                                      item: orderItems[i],
-                                      // allCustomers: _allCustomers,
-                                      allItems: _allItems,
-                                      // isLoadingCustomers: _isLoading,
-                                      isLoadingItems: _isLoadingItems,
-                                      onRemove: (index) => setState(
-                                        () => orderItems.removeAt(index),
-                                      ),
-                                      onUpdate: (index, updatedItem) {
-                                        setState(
-                                          () => orderItems[index] = updatedItem,
-                                        );
-                                        if (_isDuplicateItem(
-                                          updatedItem.itemCode,
-                                        )) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                'Item "${updatedItem.itemName}" already added. And this is additional quantity!',
-                                              ),
-                                              backgroundColor: Colors.blue,
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      onItemSelected: () => setState(() {
-                                        if (i == orderItems.length - 1 &&
-                                            orderItems[i].itemCode.isNotEmpty) {
-                                          orderItems.add(
-                                            OrderItemExtension.empty(),
-                                          );
-                                        }
-                                      }),
-                                      // onCustomerSelected: () {},
-                                      onAddNewRow: _addNewRow,
+                                  Text(
+                                    'Items:',
+                                    style: totalTextStyle.copyWith(
+                                      fontSize: 13,
                                     ),
+                                  ),
+                                  Text(
+                                    _totalQuantity.toStringAsFixed(
+                                      _totalQuantity % 1 == 0 ? 0 : 2,
+                                    ),
+                                    style: totalTextStyle.copyWith(
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Amount:',
+                                    style: totalTextStyle.copyWith(
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  Text(
+                                    '₹${_totalCalculationAmount.toStringAsFixed(2)}',
+                                    style: amountTextStyle.copyWith(
+                                      fontSize: 13,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
-                          ),
+                          ],
                         ),
-
-                        // **Totals & Submit Button (Fixed at Bottom)**
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12, // Reduced horizontal padding
-                            vertical: 8, // Reduced vertical padding
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.deepPurple[50],
-                            borderRadius: BorderRadius.circular(
-                              6,
-                            ), // Smaller border radius
-                            border: Border.all(color: Colors.deepPurple[100]!),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Items:',
-                                style: totalTextStyle.copyWith(fontSize: 13),
-                              ), // Smaller text
-                              Text(
-                                _totalQuantity.toStringAsFixed(
-                                  _totalQuantity % 1 == 0 ? 0 : 2,
-                                ),
-                                style: totalTextStyle.copyWith(fontSize: 13),
-                              ), // Smaller text
-                              Text(
-                                'Amount:',
-                                style: totalTextStyle.copyWith(fontSize: 13),
-                              ), // Smaller text
-                              Text(
-                                '₹${_totalCalculationAmount.toStringAsFixed(2)}',
-                                style: amountTextStyle.copyWith(fontSize: 13),
-                              ), // Smaller text
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 4), // Reduced spacing
-                        SizedBox(
-                          width: double.infinity,
-                          height: 40, // Reduced height
-                          child: ElevatedButton(
-                            onPressed: _submitOrder,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurple[700],
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  4,
-                                ), // Smaller radius
-                              ),
-                              elevation: 0, // No elevation
-                              shadowColor: Colors.transparent,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ), // Reduced padding
-                              minimumSize: Size
-                                  .zero, // Allows button to be as small as possible
-                              tapTargetSize: MaterialTapTargetSize
-                                  .shrinkWrap, // Reduces touch target
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.check_circle_outline,
-                                  size: 16, // Smaller icon
-                                ),
-                                SizedBox(width: 4), // Reduced spacing
-                                Text(
-                                  'SUBMIT',
-                                  style: TextStyle(
-                                    fontSize: 13, // Smaller font
-                                    fontWeight:
-                                        FontWeight.w500, // Medium weight
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ],
+
+                  // **Submit Button (Now positioned outside the card)**
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50, // Slightly taller for better visibility
+                    child: ElevatedButton(
+                      onPressed: _submitOrder,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple[700],
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            8,
+                          ), // Rounded corners
+                        ),
+                        elevation: 4, // More elevation for prominence
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                            size: 20, // Slightly larger icon
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'SUBMIT ORDER',
+                            style: TextStyle(
+                              fontSize: 16, // Slightly larger text
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 50), // Add some bottom padding
+                ],
+              );
+            },
           ),
         ),
       ),
