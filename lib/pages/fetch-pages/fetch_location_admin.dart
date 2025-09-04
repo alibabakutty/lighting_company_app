@@ -83,7 +83,7 @@ class _FetchLocationAdminState extends State<FetchLocationAdmin> {
         'https://maps.googleapis.com/maps/api/staticmap?'
         'center=${location.latitude},${location.longitude}'
         '&zoom=15'
-        '&size=300x150'
+        '&size=200x100'
         '&maptype=roadmap'
         '&markers=color:red%7C${location.latitude},${location.longitude}'
         '&key=${MapsConfig.apiKey}';
@@ -92,16 +92,19 @@ class _FetchLocationAdminState extends State<FetchLocationAdmin> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          height: 150,
+          height: 100,
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade300, width: 0.8),
+            borderRadius: BorderRadius.circular(6),
           ),
+          clipBehavior: Clip.hardEdge,
           child: FutureBuilder<bool>(
             future: _checkMapAvailability(staticMapUrl),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                );
               }
 
               if (snapshot.data == true) {
@@ -119,7 +122,7 @@ class _FetchLocationAdminState extends State<FetchLocationAdmin> {
             },
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         _buildAddressText(location),
       ],
     );
@@ -142,15 +145,16 @@ class _FetchLocationAdminState extends State<FetchLocationAdmin> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.location_on, size: 30, color: Colors.green),
-            const SizedBox(height: 8),
+            const Icon(Icons.location_on, size: 24, color: Colors.green),
+            const SizedBox(height: 4),
             Text(
-              '${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}',
-              style: const TextStyle(fontSize: 12),
+              '${location.latitude.toStringAsFixed(5)}, ${location.longitude.toStringAsFixed(5)}',
+              style: const TextStyle(fontSize: 11, color: Colors.black87),
             ),
-            TextButton(
+            IconButton(
               onPressed: () => _openMap(location),
-              child: const Text('Open in Maps'),
+              icon: const Icon(Icons.map, size: 18, color: Colors.blue),
+              tooltip: 'Open in Maps',
             ),
           ],
         ),
@@ -176,28 +180,24 @@ class _FetchLocationAdminState extends State<FetchLocationAdmin> {
       ),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Row(
-            children: [
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(),
-              ),
-              SizedBox(width: 8),
-              Text('Loading address...'),
-            ],
+          return const Text(
+            'Loading address...',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
           );
         }
 
         final text =
             snapshot.data ??
-            '${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}';
+            '${location.latitude.toStringAsFixed(5)}, ${location.longitude.toStringAsFixed(5)}';
 
         return InkWell(
           onTap: () => _openMap(location),
           child: Text(
             text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
+              fontSize: 12,
               color: Colors.blue.shade700,
               decoration: TextDecoration.underline,
             ),
@@ -233,16 +233,40 @@ class _FetchLocationAdminState extends State<FetchLocationAdmin> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ListTile(
-                          leading: const Icon(Icons.admin_panel_settings),
-                          title: Text(admin.username ?? 'No username'),
-                          subtitle: Text(admin.email ?? 'No email'),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.admin_panel_settings,
+                              color: Colors.blueGrey,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                admin.username ?? 'No username',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                admin.email ?? 'No email',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 8),
                         if (admin.lastLoginLocation != null)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: _locationPreview(admin.lastLoginLocation!),
-                          ),
+                          _locationPreview(admin.lastLoginLocation!),
                       ],
                     ),
                   ),

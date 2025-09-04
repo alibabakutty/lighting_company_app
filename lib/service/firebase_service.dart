@@ -498,6 +498,59 @@ class FirebaseService {
     }
   }
 
+  // Fetch orders by customer name
+  Future<List<Map<String, dynamic>>> getOrdersByCustomerName(
+    String customerName,
+  ) async {
+    try {
+      // Query orders by customer name
+      QuerySnapshot snapshot = await _db
+          .collection('orders')
+          .where('customer_name', isEqualTo: customerName)
+          .orderBy('createdAt', descending: true) // sort newest first
+          .get();
+
+      // Map docs to List<Map<String, dynamic>>
+      return snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id; // include document ID
+        return data;
+      }).toList();
+    } on FirebaseException catch (e) {
+      // Index might be missing for (where + orderBy)
+      if (e.code == 'failed-precondition') {
+        // fallback: no ordering
+        QuerySnapshot snapshot = await _db
+            .collection('orders')
+            .where('customer_name', isEqualTo: customerName)
+            .get();
+
+        final orders = snapshot.docs.map((doc) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          data['id'] = doc.id;
+          return data;
+        }).toList();
+
+        // Do client-side sort
+        orders.sort((a, b) {
+          final aTime = a['createdAt'] as Timestamp?;
+          final bTime = b['createdAt'] as Timestamp?;
+          if (aTime == null || bTime == null) return 0;
+          return bTime.compareTo(aTime); // newest first
+        });
+
+        return orders;
+      }
+      // ignore: avoid_print
+      print('Error fetching orders by customer name: $e');
+      return [];
+    } catch (e) {
+      // ignore: avoid_print
+      print('Unexpected error: $e');
+      return [];
+    }
+  }
+
   // fetch all Items
   Future<List<ItemMasterData>> getAllItems() async {
     try {

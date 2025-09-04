@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:excel/excel.dart';
+import 'package:excel/excel.dart' as excel;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lighting_company_app/service/firebase_service.dart';
@@ -25,6 +25,11 @@ class _OrderReportState extends State<OrderReport> {
   DateTime? _specificDate;
   bool _useSpecificDate = false;
 
+  // Text filters
+  final TextEditingController _orderNoController = TextEditingController();
+  final TextEditingController _userController = TextEditingController();
+  final TextEditingController _customerController = TextEditingController();
+
   // Totals
   double _totalQuantity = 0;
   double _totalCalculationAmount = 0;
@@ -35,8 +40,16 @@ class _OrderReportState extends State<OrderReport> {
     _loadInitialData();
   }
 
+  @override
+  void dispose() {
+    _orderNoController.dispose();
+    _userController.dispose();
+    _customerController.dispose();
+    super.dispose();
+  }
+
   // Helper function to create a row of CellValues from an order
-  List<CellValue> _createRow(Map<String, dynamic> order) {
+  List<excel.CellValue> _createRow(Map<String, dynamic> order) {
     final item = order['itemData'] as Map<String, dynamic>?;
 
     // Calculate GST amount if needed
@@ -50,25 +63,25 @@ class _OrderReportState extends State<OrderReport> {
     }
 
     return [
-      TextCellValue(
+      excel.TextCellValue(
         DateFormat('dd-MM-yyyy').format(order['createdAt'].toDate()),
       ),
-      TextCellValue(order['order_number']?.toString() ?? 'N/A'),
-      TextCellValue(order['username'] ?? 'N/A'),
-      TextCellValue(order['customer_name']?.toString() ?? 'N/A'),
-      TextCellValue(item?['itemCode']?.toString() ?? 'N/A'),
-      TextCellValue(item?['itemName']?.toString() ?? 'N/A'),
-      DoubleCellValue(item?['quantity']?.toDouble() ?? 0.0),
-      TextCellValue(item?['uom']?.toString() ?? 'Nos'),
-      TextCellValue(
+      excel.TextCellValue(order['order_number']?.toString() ?? 'N/A'),
+      excel.TextCellValue(order['username'] ?? 'N/A'),
+      excel.TextCellValue(order['customer_name']?.toString() ?? 'N/A'),
+      excel.TextCellValue(item?['itemCode']?.toString() ?? 'N/A'),
+      excel.TextCellValue(item?['itemName']?.toString() ?? 'N/A'),
+      excel.DoubleCellValue(item?['quantity']?.toDouble() ?? 0.0),
+      excel.TextCellValue(item?['uom']?.toString() ?? 'Nos'),
+      excel.TextCellValue(
         item?['gstRate'] != null
             ? '${item!['gstRate'].toStringAsFixed(2)}%'
             : 'N/A',
       ),
-      DoubleCellValue(gstAmount),
-      DoubleCellValue(item?['totalAmount']?.toDouble() ?? 0.0),
-      DoubleCellValue(item?['mrpAmount']?.toDouble() ?? 0.0),
-      DoubleCellValue(item?['itemNetAmount']?.toDouble() ?? 0.0),
+      excel.DoubleCellValue(gstAmount),
+      excel.DoubleCellValue(item?['totalAmount']?.toDouble() ?? 0.0),
+      excel.DoubleCellValue(item?['mrpAmount']?.toDouble() ?? 0.0),
+      excel.DoubleCellValue(item?['itemNetAmount']?.toDouble() ?? 0.0),
     ];
   }
 
@@ -81,22 +94,9 @@ class _OrderReportState extends State<OrderReport> {
     }
 
     try {
-      // Debug print to verify data
-      debugPrint('===== EXPORT DEBUG =====');
-      debugPrint('Number of orders: ${_flattenedOrders.length}');
-      if (_flattenedOrders.isNotEmpty) {
-        debugPrint('First order data: ${_flattenedOrders.first}');
-        debugPrint(
-          'First order createdAt: ${_flattenedOrders.first['createdAt']}',
-        );
-        debugPrint(
-          'First order itemData: ${_flattenedOrders.first['itemData']}',
-        );
-      }
-
       // Create Excel workbook
-      final excel = Excel.createExcel();
-      final sheet = excel['Order Report'];
+      final excel.Excel workbook = excel.Excel.createExcel();
+      final sheet = workbook['Order Report'];
 
       // Define headers
       final headers = [
@@ -116,7 +116,7 @@ class _OrderReportState extends State<OrderReport> {
       ];
 
       // Add header row
-      sheet.appendRow(headers.map((h) => TextCellValue(h)).toList());
+      sheet.appendRow(headers.map((h) => excel.TextCellValue(h)).toList());
 
       // Add data rows
       for (var order in _flattenedOrders) {
@@ -150,30 +150,26 @@ class _OrderReportState extends State<OrderReport> {
         totalsRow
             .map(
               (v) => v is num
-                  ? DoubleCellValue(v.toDouble())
-                  : TextCellValue(v.toString()),
+                  ? excel.DoubleCellValue(v.toDouble())
+                  : excel.TextCellValue(v.toString()),
             )
             .toList(),
       );
 
-      // Save to temporary directory first for testing
+      // Save to temporary directory
       final directory = await getTemporaryDirectory();
       final filePath =
           '${directory.path}/orders_${DateTime.now().millisecondsSinceEpoch}.xlsx';
-      debugPrint('Attempting to save to: $filePath');
 
-      final excelBytes = excel.encode();
+      final excelBytes = workbook.encode();
       if (excelBytes == null) {
         throw Exception('Excel encode returned null');
       }
 
       final file = File(filePath);
       await file.writeAsBytes(excelBytes, flush: true);
-      debugPrint('File written successfully');
 
-      // Verify file exists
       if (await file.exists()) {
-        debugPrint('File exists, size: ${file.lengthSync()} bytes');
         await OpenFile.open(filePath);
         ScaffoldMessenger.of(
           // ignore: use_build_context_synchronously
@@ -182,10 +178,8 @@ class _OrderReportState extends State<OrderReport> {
       } else {
         throw Exception('File was not created');
       }
-    } catch (e, stackTrace) {
-      debugPrint('===== EXPORT ERROR =====');
-      debugPrint('Error: $e');
-      debugPrint('Stack trace: $stackTrace');
+    } catch (e) {
+      debugPrint('Export error: $e');
       ScaffoldMessenger.of(
         // ignore: use_build_context_synchronously
         context,
@@ -211,6 +205,9 @@ class _OrderReportState extends State<OrderReport> {
     String? dateString,
     String? startDateString,
     String? endDateString,
+    String? orderNo,
+    String? username,
+    String? customerName,
   }) async {
     setState(() {
       _isLoading = true;
@@ -234,6 +231,28 @@ class _OrderReportState extends State<OrderReport> {
         orders = await _firebaseService.getOrdersByDate(
           DateTime.now().toString(),
         );
+      }
+
+      // Apply text filters
+      if (orderNo != null && orderNo.isNotEmpty) {
+        orders = orders.where((order) {
+          final orderNumber = order['order_number']?.toString() ?? '';
+          return orderNumber.toLowerCase().contains(orderNo.toLowerCase());
+        }).toList();
+      }
+
+      if (username != null && username.isNotEmpty) {
+        orders = orders.where((order) {
+          final user = order['username']?.toString() ?? '';
+          return user.toLowerCase().contains(username.toLowerCase());
+        }).toList();
+      }
+
+      if (customerName != null && customerName.isNotEmpty) {
+        orders = orders.where((order) {
+          final customer = order['customer_name']?.toString() ?? '';
+          return customer.toLowerCase().contains(customerName.toLowerCase());
+        }).toList();
       }
 
       // Flatten orders into item rows
@@ -322,7 +341,7 @@ class _OrderReportState extends State<OrderReport> {
       children: [
         Row(
           children: [
-            // Date filter type dropdown - made thinner
+            // Date filter type dropdown
             SizedBox(
               width: 100,
               child: DropdownButtonFormField<String>(
@@ -330,7 +349,7 @@ class _OrderReportState extends State<OrderReport> {
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.symmetric(
-                    vertical: 4, // Reduced padding to make it thinner
+                    vertical: 4,
                     horizontal: 8,
                   ),
                   isDense: true,
@@ -356,7 +375,7 @@ class _OrderReportState extends State<OrderReport> {
                 dropdownColor: Colors.white,
                 icon: Icon(Icons.arrow_drop_down, size: 16),
                 style: TextStyle(fontSize: 12, color: Colors.black87),
-                isExpanded: true, // Ensures dropdown takes full width
+                isExpanded: true,
               ),
             ),
 
@@ -401,9 +420,9 @@ class _OrderReportState extends State<OrderReport> {
                               ),
                               child: Text(
                                 _startDate != null
-                                    ? DateFormat('dd-MM-yyyy').format(
-                                        _startDate!,
-                                      ) // Full date format
+                                    ? DateFormat(
+                                        'dd-MM-yyyy',
+                                      ).format(_startDate!)
                                     : 'Select date',
                                 style: TextStyle(fontSize: 12),
                               ),
@@ -427,9 +446,7 @@ class _OrderReportState extends State<OrderReport> {
                               ),
                               child: Text(
                                 _endDate != null
-                                    ? DateFormat('dd-MM-yyyy').format(
-                                        _endDate!,
-                                      ) // Full date format
+                                    ? DateFormat('dd-MM-yyyy').format(_endDate!)
                                     : 'Select date',
                                 style: TextStyle(fontSize: 12),
                               ),
@@ -454,22 +471,96 @@ class _OrderReportState extends State<OrderReport> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
-                onPressed: () {
-                  if (_useSpecificDate && _specificDate != null) {
-                    _fetchOrders(dateString: _specificDate.toString());
-                  } else if (!_useSpecificDate &&
-                      _startDate != null &&
-                      _endDate != null) {
-                    _fetchOrders(
-                      startDateString: _startDate.toString(),
-                      endDateString: _endDate.toString(),
-                    );
-                  }
-                },
+                onPressed: _applyFilters,
                 child: Text('Search', style: TextStyle(fontSize: 12)),
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextFilterField(
+    String label,
+    TextEditingController controller,
+    String hintText,
+  ) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        isDense: true,
+        suffixIcon: controller.text.isNotEmpty
+            ? IconButton(
+                icon: Icon(Icons.clear, size: 16),
+                onPressed: () {
+                  controller.clear();
+                  _applyFilters();
+                },
+              )
+            : null,
+      ),
+      style: TextStyle(fontSize: 12),
+      onSubmitted: (_) => _applyFilters(),
+    );
+  }
+
+  void _applyFilters() {
+    if (_useSpecificDate && _specificDate != null) {
+      _fetchOrders(
+        dateString: _specificDate.toString(),
+        orderNo: _orderNoController.text,
+        username: _userController.text,
+        customerName: _customerController.text,
+      );
+    } else if (!_useSpecificDate && _startDate != null && _endDate != null) {
+      _fetchOrders(
+        startDateString: _startDate.toString(),
+        endDateString: _endDate.toString(),
+        orderNo: _orderNoController.text,
+        username: _userController.text,
+        customerName: _customerController.text,
+      );
+    } else {
+      // If no date selected, use today's date
+      _fetchOrders(
+        dateString: DateTime.now().toString(),
+        orderNo: _orderNoController.text,
+        username: _userController.text,
+        customerName: _customerController.text,
+      );
+    }
+  }
+
+  Widget _buildTextFilters() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildTextFilterField(
+            'Order #',
+            _orderNoController,
+            'Filter by order number',
+          ),
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: _buildTextFilterField(
+            'User',
+            _userController,
+            'Filter by username',
+          ),
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: _buildTextFilterField(
+            'Customer',
+            _customerController,
+            'Filter by customer name',
+          ),
         ),
       ],
     );
@@ -491,7 +582,7 @@ class _OrderReportState extends State<OrderReport> {
     );
   }
 
-  Widget _buildDataTableWithTotals() {
+  Widget _buildDataTable() {
     final TextStyle headerTextStyle = TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.bold,
@@ -501,12 +592,6 @@ class _OrderReportState extends State<OrderReport> {
     final TextStyle cellTextStyle = TextStyle(
       fontSize: 14,
       color: Colors.black87,
-    );
-
-    final TextStyle totalTextStyle = TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.bold,
-      color: Colors.blueGrey.shade800,
     );
 
     // Reset totals
@@ -566,7 +651,7 @@ class _OrderReportState extends State<OrderReport> {
                   Alignment.centerLeft,
                 ),
               ),
-              // Customer Name (new column)
+              // Customer Name
               DataCell(
                 _buildCell(
                   order['customer_name']?.toString() ?? 'N/A',
@@ -666,158 +751,174 @@ class _OrderReportState extends State<OrderReport> {
       }
     });
 
-    // Add totals row
-    rows.add(
-      DataRow(
-        color: WidgetStateProperty.resolveWith<Color>(
-          (Set<WidgetState> states) => Colors.blueGrey.shade50,
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columnSpacing: 0,
+          horizontalMargin: 0,
+          headingRowHeight: 40,
+          // ignore: deprecated_member_use
+          dataRowHeight: 36,
+          headingRowColor: WidgetStateProperty.resolveWith<Color>(
+            (Set<WidgetState> states) => Colors.grey.shade200,
+          ),
+          columns: [
+            DataColumn(
+              label: _buildHeaderCell(
+                'Date',
+                headerTextStyle,
+                Alignment.centerLeft,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'Order #',
+                headerTextStyle,
+                Alignment.centerLeft,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'User',
+                headerTextStyle,
+                Alignment.centerLeft,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'Customer',
+                headerTextStyle,
+                Alignment.centerLeft,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'Item Code',
+                headerTextStyle,
+                Alignment.centerLeft,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'Item Name',
+                headerTextStyle,
+                Alignment.centerLeft,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'Qty',
+                headerTextStyle,
+                Alignment.centerRight,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell('UOM', headerTextStyle, Alignment.center),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'GST %',
+                headerTextStyle,
+                Alignment.centerRight,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'GST Amt',
+                headerTextStyle,
+                Alignment.centerRight,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'Rate (GST)',
+                headerTextStyle,
+                Alignment.centerRight,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'MRP',
+                headerTextStyle,
+                Alignment.centerRight,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'Net Amt',
+                headerTextStyle,
+                Alignment.centerRight,
+              ),
+            ),
+          ],
+          rows: rows,
         ),
-        cells: [
-          DataCell(Container()), // Date
-          DataCell(Container()), // Order #
-          DataCell(Container()), // Username
-          DataCell(Container()), // Customer Name
-          DataCell(Container()), // Item Code
-          DataCell(Container()), // Item Name
-          // Quantity column
-          DataCell(
-            _buildCell(
-              _totalQuantity.toStringAsFixed(_totalQuantity % 1 == 0 ? 0 : 2),
-              totalTextStyle.copyWith(color: Colors.green.shade700),
-              Alignment.centerRight,
+      ),
+    );
+  }
+
+  Widget _buildTotalsFooter() {
+    return Container(
+      width: double.infinity,
+      height: 36,
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.blueGrey.shade50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.blueGrey.shade200, width: 0.8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'TOTALS:',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.blueGrey.shade800,
             ),
           ),
-          DataCell(Container()), // UOM (empty)
-          DataCell(Container()), // GST Rate
-          DataCell(Container()), // GST Amount
-          DataCell(Container()), // Rate (Total Amount)
-          DataCell(Container()), // MRP Amount
-          DataCell(
-            _buildCell(
-              formatAmount(_totalCalculationAmount),
-              totalTextStyle.copyWith(color: Colors.green.shade700),
-              Alignment.centerRight,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.green.shade200, width: 0.8),
+                ),
+                child: Text(
+                  'Qty: ${_totalQuantity.toStringAsFixed(_totalQuantity % 1 == 0 ? 0 : 2)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green.shade800,
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.blue.shade200, width: 0.8),
+                ),
+                child: Text(
+                  'Amount: ${formatAmount(_totalCalculationAmount)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green.shade800,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
-    );
-
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columnSpacing: 0,
-                horizontalMargin: 0,
-                headingRowHeight: 40,
-                // ignore: deprecated_member_use
-                dataRowHeight: 36,
-                headingRowColor: WidgetStateProperty.resolveWith<Color>(
-                  (Set<WidgetState> states) => Colors.grey.shade200,
-                ),
-                columns: [
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'Date',
-                      headerTextStyle,
-                      Alignment.centerLeft,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'Order #',
-                      headerTextStyle,
-                      Alignment.centerLeft,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'User',
-                      headerTextStyle,
-                      Alignment.centerLeft,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'Customer',
-                      headerTextStyle,
-                      Alignment.centerLeft,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'Item Code',
-                      headerTextStyle,
-                      Alignment.centerLeft,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'Item Name',
-                      headerTextStyle,
-                      Alignment.centerLeft,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'Qty',
-                      headerTextStyle,
-                      Alignment.centerRight,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'UOM',
-                      headerTextStyle,
-                      Alignment.center,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'GST %',
-                      headerTextStyle,
-                      Alignment.centerRight,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'GST Amt',
-                      headerTextStyle,
-                      Alignment.centerRight,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'Rate (GST)',
-                      headerTextStyle,
-                      Alignment.centerRight,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'MRP',
-                      headerTextStyle,
-                      Alignment.centerRight,
-                    ),
-                  ),
-                  DataColumn(
-                    label: _buildHeaderCell(
-                      'Net Amt',
-                      headerTextStyle,
-                      Alignment.centerRight,
-                    ),
-                  ),
-                ],
-                rows: rows,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -845,7 +946,13 @@ class _OrderReportState extends State<OrderReport> {
               margin: EdgeInsets.zero,
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
-                child: _buildDateInputs(),
+                child: Column(
+                  children: [
+                    _buildDateInputs(),
+                    SizedBox(height: 12),
+                    _buildTextFilters(),
+                  ],
+                ),
               ),
             ),
             SizedBox(height: 8),
@@ -861,13 +968,22 @@ class _OrderReportState extends State<OrderReport> {
                     )
                   : _flattenedOrders.isEmpty
                   ? const Center(child: Text('No orders found'))
-                  : Card(
-                      elevation: 2,
-                      margin: EdgeInsets.zero,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: _buildDataTableWithTotals(),
-                      ),
+                  : Column(
+                      children: [
+                        Expanded(
+                          child: Card(
+                            elevation: 2,
+                            margin: EdgeInsets.zero,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: _buildDataTable(),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        _buildTotalsFooter(),
+                        SizedBox(height: 50),
+                      ],
                     ),
             ),
           ],
@@ -878,6 +994,5 @@ class _OrderReportState extends State<OrderReport> {
 }
 
 String formatAmount(double amount) {
-  // Format with 2 decimal places and comma separators (Indian numbering system)
   return '₹ ${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
 }
