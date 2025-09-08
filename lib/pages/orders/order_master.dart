@@ -238,7 +238,7 @@ class _OrderMasterState extends State<OrderMaster> {
         double totalCalculationAmount = 0.0;
         for (var item in validOrderItems) {
           totalQty += item.quantity;
-          totalCalculationAmount += item.quantity * item.totalAmount;
+          totalCalculationAmount += item.quantity * item.discountDeductedAmount;
         }
 
         String selectedCustomerCode = '';
@@ -337,7 +337,7 @@ class _OrderMasterState extends State<OrderMaster> {
   double get _totalCalculationAmount {
     return orderItems.fold(
       0,
-      (sum, item) => sum + (item.totalAmount * item.quantity),
+      (sum, item) => sum + (item.discountDeductedAmount * item.quantity),
     );
   }
 
@@ -485,23 +485,28 @@ class _OrderMasterState extends State<OrderMaster> {
                                     ),
                                     const SizedBox(width: 2),
                                     SizedBox(
-                                      width: 87,
+                                      width: 80,
                                       child: Text(
                                         'ITEM NAME',
                                         style: headerStyle,
                                       ),
                                     ),
-                                    const SizedBox(width: 4),
+                                    const SizedBox(width: 2),
                                     SizedBox(
-                                      width: 40,
+                                      width: 30,
                                       child: Text('QTY', style: headerStyle),
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: 2),
                                     SizedBox(
-                                      width: 60,
+                                      width: 35,
                                       child: Text('RATE', style: headerStyle),
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: 2),
+                                    SizedBox(
+                                      width: 35,
+                                      child: Text('DISC', style: headerStyle),
+                                    ),
+                                    const SizedBox(width: 2),
                                     SizedBox(
                                       width: 90,
                                       child: Text('AMOUNT', style: headerStyle),
@@ -535,24 +540,77 @@ class _OrderMasterState extends State<OrderMaster> {
                                             () => orderItems.removeAt(index),
                                           ),
                                           onUpdate: (index, updatedItem) {
-                                            setState(
-                                              () => orderItems[index] =
-                                                  updatedItem,
-                                            );
-                                            if (_isDuplicateItem(
-                                              updatedItem.itemCode,
-                                            )) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    'Item "${updatedItem.itemName}" already added. And this is additional quantity!',
+                                            setState(() {
+                                              orderItems[index] = updatedItem;
+                                            });
+                                          },
+                                          // onUpdate: (index, updatedItem) {
+                                          //   setState(
+                                          //     () => orderItems[index] =
+                                          //         updatedItem,
+                                          //   );
+                                          //   if (_isDuplicateItem(
+                                          //     updatedItem.itemCode,
+                                          //   )) {
+                                          //     ScaffoldMessenger.of(
+                                          //       context,
+                                          //     ).showSnackBar(
+                                          //       SnackBar(
+                                          //         content: Text(
+                                          //           'Item "${updatedItem.itemName}" already added. And this is additional quantity!',
+                                          //         ),
+                                          //         backgroundColor: Colors.blue,
+                                          //       ),
+                                          //     );
+                                          //   }
+                                          // },
+                                          onItemSelectedWithData: (index, selectedItem) {
+                                            setState(() {
+                                              // check if item already exists
+                                              final existingIndex = orderItems
+                                                  .indexWhere(
+                                                    (item) =>
+                                                        item.itemCode ==
+                                                        selectedItem.itemCode,
+                                                  );
+                                              if (existingIndex != -1) {
+                                                // increase quantity if exists
+                                                final existingItem =
+                                                    orderItems[existingIndex];
+                                                final updatedItem = existingItem
+                                                    .copyWith(
+                                                      quantity:
+                                                          existingItem
+                                                              .quantity +
+                                                          1,
+                                                    );
+                                                orderItems[existingIndex] =
+                                                    updatedItem;
+
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      'Item "${selectedItem.itemName}" quantity increased by 1 as it already exists.',
+                                                    ),
+                                                    backgroundColor:
+                                                        Colors.blue,
                                                   ),
-                                                  backgroundColor: Colors.blue,
-                                                ),
-                                              );
-                                            }
+                                                );
+                                              } else {
+                                                // update the current row with new item
+                                                orderItems[index] =
+                                                    selectedItem;
+                                                // Optionally add new empty row if it's last one
+                                                if (index ==
+                                                    orderItems.length - 1) {
+                                                  orderItems.add(
+                                                    OrderItemExtension.empty(),
+                                                  );
+                                                }
+                                              }
+                                            });
                                           },
                                           onItemSelected: () => setState(() {
                                             if (i == orderItems.length - 1 &&

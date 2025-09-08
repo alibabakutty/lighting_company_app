@@ -17,6 +17,8 @@ extension OrderItemExtension on OrderItem {
     itemCode: '',
     itemName: '',
     itemRateAmount: 0.0,
+    discount: 0.0,
+    discountDeductedAmount: 0.0,
     quantity: 1,
     uom: '',
     gstRate: 0.0,

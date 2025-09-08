@@ -736,7 +736,14 @@ class FirebaseService {
         await _db.collection('item_master_data').doc(docId).update({
           'item_code': updatedData.itemCode,
           'item_name': updatedData.itemName,
+          'uom': updatedData.uom,
           'item_rate_amount': updatedData.itemRateAmount,
+          'discount': updatedData.discount,
+          'discount_deducted_amount': updatedData.discountDeductedAmount,
+          'gst_rate': updatedData.gstRate,
+          'gst_amount': updatedData.gstAmount,
+          'total_amount': updatedData.totalAmount,
+          'mrp_amount': updatedData.mrpAmount,
           'item_status': updatedData.itemStatus,
           'timestamp': FieldValue.serverTimestamp(),
         });

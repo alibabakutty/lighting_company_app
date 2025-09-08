@@ -10,6 +10,9 @@ class CompactFormField extends StatelessWidget {
   final String? Function(String?)? validator;
   final TextAlign textAlign;
   final double fieldWidth;
+  final void Function(String)? onChanged;
+  final VoidCallback? onEditingComplete;
+  final bool isPercentage;
 
   const CompactFormField({
     super.key,
@@ -22,6 +25,9 @@ class CompactFormField extends StatelessWidget {
     this.validator,
     this.textAlign = TextAlign.left,
     this.fieldWidth = 0.53,
+    this.onChanged,
+    this.onEditingComplete,
+    this.isPercentage = false,
   });
 
   @override
@@ -74,8 +80,16 @@ class CompactFormField extends StatelessWidget {
                 ),
                 filled: true,
                 fillColor: isReadOnly ? Colors.grey.shade50 : Colors.white,
+                suffixText: isPercentage ? '%' : null,
+                suffixStyle: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                ),
               ),
               validator: validator,
+              onChanged: onChanged,
+              onEditingComplete: onEditingComplete,
             ),
           ),
         ],

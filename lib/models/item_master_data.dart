@@ -5,6 +5,8 @@ class ItemMasterData {
   final String itemName;
   final String uom;
   final double itemRateAmount;
+  final double discount;
+  final double discountDeductedAmount;
   final double gstRate;
   final double gstAmount;
   final double totalAmount;
@@ -17,6 +19,8 @@ class ItemMasterData {
     required this.itemName,
     this.uom = 'Nos',
     required this.itemRateAmount,
+    this.discount = 0.0,
+    this.discountDeductedAmount = 0.0,
     this.gstRate = 0.0,
     this.gstAmount = 0.0,
     this.totalAmount = 0.0,
@@ -32,6 +36,8 @@ class ItemMasterData {
       itemName: data['item_name'] ?? '',
       uom: data['uom'] ?? '',
       itemRateAmount: data['item_rate_amount'] ?? 0.0,
+      discount: data['discount'] ?? 0.0,
+      discountDeductedAmount: data['discount_deducted_amount'] ?? 0.0,
       gstRate: data['gst_rate'] ?? 0.0,
       gstAmount: data['gst_amount'] ?? 0.0,
       totalAmount: data['total_amount'] ?? 0.0,
@@ -48,6 +54,8 @@ class ItemMasterData {
       'item_name': itemName,
       'uom': uom,
       'item_rate_amount': itemRateAmount,
+      'discount': discount,
+      'discount_deducted_amount': discountDeductedAmount,
       'gst_rate': gstRate,
       'gst_amount': gstAmount,
       'total_amount': totalAmount,

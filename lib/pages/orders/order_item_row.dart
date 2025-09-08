@@ -9,6 +9,7 @@ class OrderItemRow extends StatefulWidget {
   final bool isLoadingItems;
   final Function(int) onRemove;
   final Function(int, OrderItem) onUpdate;
+  final Function(int, OrderItem) onItemSelectedWithData;
   final VoidCallback onItemSelected;
   final VoidCallback onAddNewRow;
 
@@ -20,6 +21,7 @@ class OrderItemRow extends StatefulWidget {
     required this.isLoadingItems,
     required this.onRemove,
     required this.onUpdate,
+    required this.onItemSelectedWithData,
     required this.onItemSelected,
     required this.onAddNewRow,
   });
@@ -34,7 +36,10 @@ class _OrderItemRowState extends State<OrderItemRow> {
   final TextEditingController _itemSearchController = TextEditingController();
   late TextEditingController _quantityController;
   late TextEditingController _uomController;
+  late TextEditingController _discountController;
   late TextEditingController _netAmountController;
+
+  bool _showSecondaryFields = false;
 
   @override
   void initState() {
@@ -46,11 +51,19 @@ class _OrderItemRowState extends State<OrderItemRow> {
           : widget.item.quantity.toStringAsFixed(2),
     );
     _uomController = TextEditingController(text: widget.item.uom);
+    _discountController = TextEditingController(
+      text: widget.item.discount > 0
+          ? '${widget.item.discount.round()}%'
+          : '0%',
+    );
     _netAmountController = TextEditingController(
       text:
-          '₹${(widget.item.totalAmount * widget.item.quantity).toStringAsFixed(2)}',
+          '₹${(widget.item.discountDeductedAmount * widget.item.quantity).toStringAsFixed(2)}',
     );
     _itemNameController = TextEditingController(text: widget.item.itemName);
+
+    // show secondary fields if item is already selected
+    _showSecondaryFields = widget.item.itemCode.isNotEmpty;
 
     _quantityController.addListener(_updateAmount);
     _itemNameController.addListener(_handleNameChange);
@@ -81,15 +94,24 @@ class _OrderItemRowState extends State<OrderItemRow> {
     if (widget.item != oldWidget.item) {
       if (widget.item.itemCode.isEmpty) {
         _itemSearchController.clear();
+        setState(() {
+          _showSecondaryFields = false;
+        });
       } else {
         _itemNameController.text = widget.item.itemName;
+        setState(() {
+          _showSecondaryFields = true;
+        });
       }
       _quantityController.text = widget.item.quantity % 1 == 0
           ? widget.item.quantity.toInt().toString()
           : widget.item.quantity.toStringAsFixed(2);
       _uomController.text = widget.item.uom;
+      _discountController.text = widget.item.discount > 0
+          ? '${widget.item.discount.round()}%'
+          : '0%';
       _netAmountController.text = formatAmount(
-        widget.item.totalAmount * widget.item.quantity,
+        widget.item.discountDeductedAmount * widget.item.quantity,
       );
     }
   }
@@ -100,6 +122,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
     _itemNameController.removeListener(_handleNameChange);
     _quantityController.dispose();
     _uomController.dispose();
+    _discountController.dispose();
     _netAmountController.dispose();
     _itemNameController.dispose();
     _itemSearchController.dispose();
@@ -109,7 +132,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
 
   void _updateAmount() {
     final quantity = double.tryParse(_quantityController.text) ?? 0;
-    final amount = quantity * widget.item.totalAmount;
+    final amount = quantity * widget.item.discountDeductedAmount;
 
     _netAmountController.text = formatAmount(amount);
 
@@ -128,17 +151,26 @@ class _OrderItemRowState extends State<OrderItemRow> {
       quantity: 1.0,
       uom: selectedItem.uom,
       gstRate: selectedItem.gstRate,
+      discount: selectedItem.discount,
+      discountDeductedAmount: selectedItem.discountDeductedAmount,
       gstAmount: selectedItem.gstAmount,
       totalAmount: selectedItem.totalAmount,
       mrpAmount: selectedItem.mrpAmount,
-      itemNetAmount: selectedItem.totalAmount * 1.0,
+      itemNetAmount: selectedItem.discountDeductedAmount * 1.0,
     );
 
     _quantityController.text = '1';
-    _netAmountController.text = formatAmount(selectedItem.totalAmount);
+    _netAmountController.text = formatAmount(
+      selectedItem.discountDeductedAmount,
+    );
     _itemNameController.text = selectedItem.itemName;
 
-    widget.onUpdate(widget.index, newItem);
+    setState(() {
+      _showSecondaryFields = true;
+    });
+
+    // widget.onUpdate(widget.index, newItem);
+    widget.onItemSelectedWithData(widget.index, newItem);
     widget.onItemSelected();
     _itemSearchController.clear();
   }
@@ -157,9 +189,10 @@ class _OrderItemRowState extends State<OrderItemRow> {
             children: [
               // S.No
               SizedBox(
-                width: 40,
+                width: 20,
                 height: 32,
-                child: Center(
+                child: Align(
+                  alignment: Alignment.centerLeft,
                   child: Text(
                     '${widget.index + 1}',
                     style: const TextStyle(
@@ -172,7 +205,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
 
               // Product Name
               SizedBox(
-                width: 280,
+                width: 285,
                 height: 32,
                 child: widget.item.itemCode.isEmpty
                     ? _buildItemSearchField()
@@ -196,141 +229,166 @@ class _OrderItemRowState extends State<OrderItemRow> {
           ),
         ),
 
-        // Second Row - Qty, Rate, Amount, Buttons
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 2.0),
-          width:
-              MediaQuery.of(context).size.width * 0.99, // 90% of screen width
+        // Second Row - Qty, Rate, Amount, Buttons (only show if item selected)
+        if (_showSecondaryFields)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 2.0),
+            width:
+                MediaQuery.of(context).size.width * 0.99, // 90% of screen width
 
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(width: 83),
-              // Qty
-              SizedBox(
-                width: 40,
-                height: 32,
-                child: TextFormField(
-                  controller: _quantityController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 8,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(width: 30),
+                // Qty
+                SizedBox(
+                  width: 40,
+                  height: 32,
+                  child: TextFormField(
+                    controller: _quantityController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      isDense: true,
                     ),
-                    isDense: true,
-                  ),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  onChanged: (_) => _updateAmount(),
-                ),
-              ),
-              const SizedBox(width: 4),
-              // UOM
-              SizedBox(
-                width: 45,
-                height: 32,
-                child: TextFormField(
-                  controller: _uomController,
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 8,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
-                    isDense: true,
-                  ),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              // Rate
-              SizedBox(
-                width: 70,
-                height: 32,
-                child: TextFormField(
-                  readOnly: true,
-                  controller: TextEditingController(
-                    text: widget.item.totalAmount > 0
-                        ? '₹${widget.item.totalAmount.toStringAsFixed(2)}'
-                        : '₹0.00',
-                  ),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 8,
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
                     ),
-                    isDense: true,
-                  ),
-                  style: TextStyle(
-                    color: Colors.grey[800],
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    onChanged: (_) => _updateAmount(),
                   ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              // Amount
-              SizedBox(
-                width: 70,
-                height: 32,
-                child: TextFormField(
-                  readOnly: true,
-                  controller: _netAmountController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 8,
+                const SizedBox(width: 4),
+                // UOM
+                SizedBox(
+                  width: 45,
+                  height: 32,
+                  child: TextFormField(
+                    controller: _uomController,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      isDense: true,
                     ),
-                    isDense: true,
-                  ),
-                  style: TextStyle(
-                    color: Colors.grey[800],
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              // Add button
-              SizedBox(
-                width: 32,
-                height: 32,
-                child: IconButton(
-                  icon: const Icon(Icons.add, color: Colors.green, size: 16),
-                  padding: EdgeInsets.zero,
-                  onPressed: () {
-                    FocusScope.of(context).unfocus();
-                    widget.onAddNewRow();
-                  },
+                const SizedBox(width: 4),
+                // Rate
+                SizedBox(
+                  width: 70,
+                  height: 32,
+                  child: TextFormField(
+                    readOnly: true,
+                    controller: TextEditingController(
+                      text: widget.item.itemRateAmount > 0
+                          ? '₹${widget.item.itemRateAmount.toStringAsFixed(2)}'
+                          : '₹0.00',
+                    ),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      isDense: true,
+                    ),
+                    style: TextStyle(
+                      color: Colors.grey[800],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 2),
-              // Delete button
-              SizedBox(
-                width: 32,
-                height: 32,
-                child: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red, size: 16),
-                  padding: EdgeInsets.zero,
-                  onPressed: () {
-                    FocusScope.of(context).unfocus();
-                    widget.onRemove(widget.index);
-                  },
+                const SizedBox(width: 4),
+                // DISCOUNT
+                SizedBox(
+                  width: 45,
+                  height: 32,
+                  child: TextFormField(
+                    controller: _discountController,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      isDense: true,
+                    ),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                // Amount
+                SizedBox(
+                  width: 70,
+                  height: 32,
+                  child: TextFormField(
+                    readOnly: true,
+                    controller: _netAmountController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      isDense: true,
+                    ),
+                    style: TextStyle(
+                      color: Colors.grey[800],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                // Add button
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: IconButton(
+                    icon: const Icon(Icons.add, color: Colors.green, size: 16),
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      FocusScope.of(context).unfocus();
+                      widget.onAddNewRow();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 2),
+                // Delete button
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red, size: 16),
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      FocusScope.of(context).unfocus();
+                      widget.onRemove(widget.index);
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
@@ -390,7 +448,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
                             horizontal: 8.0,
                           ),
                           title: Text(
-                            '${item.itemCode} - ${item.itemName} - ₹${item.totalAmount}',
+                            '${item.itemCode} - ${item.itemName} - ₹${item.discountDeductedAmount}',
                             style: const TextStyle(fontSize: 13, height: 1.1),
                           ),
                           onTap: () => onSelected(item),

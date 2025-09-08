@@ -18,6 +18,7 @@ class ItemMaster extends StatefulWidget {
 class _ItemMasterState extends State<ItemMaster> {
   final FirebaseService firebaseService = FirebaseService();
   final _formKey = GlobalKey<FormState>();
+
   final TextEditingController _itemCodeController = TextEditingController();
   final TextEditingController _itemNameController = TextEditingController();
   final TextEditingController _uomController = TextEditingController(
@@ -25,10 +26,14 @@ class _ItemMasterState extends State<ItemMaster> {
   );
   final TextEditingController _itemRateAmountController =
       TextEditingController();
+  final TextEditingController _discountController = TextEditingController();
+  final TextEditingController _discountDeductedAmountController =
+      TextEditingController();
   final TextEditingController _gstRateController = TextEditingController();
   final TextEditingController _gstAmountController = TextEditingController();
   final TextEditingController _totalAmountController = TextEditingController();
   final TextEditingController _mrpAmountController = TextEditingController();
+
   String? _selectedStatus;
 
   bool _isSubmitting = false;
@@ -59,6 +64,65 @@ class _ItemMasterState extends State<ItemMaster> {
     });
   }
 
+  String formatToRounded(String value) {
+    final number = double.tryParse(value);
+    if (number == null) return value;
+    return number.toStringAsFixed(0); // rounds to integer
+  }
+
+  // Add this method to your class
+  void _formatDecimalInput(TextEditingController controller) {
+    final value = double.tryParse(controller.text);
+    if (value != null) {
+      controller.text = value.toStringAsFixed(2);
+    }
+  }
+
+  void _calculateAmounts() {
+    final itemRate = double.tryParse(_itemRateAmountController.text) ?? 0;
+    final discountPercent = double.tryParse(_discountController.text) ?? 0;
+    final gstRate = double.tryParse(_gstRateController.text) ?? 0;
+
+    if (itemRate < 0) return;
+    if (discountPercent < 0 || discountPercent > 100) return;
+    if (gstRate < 0) return;
+
+    final discountAmount = itemRate * discountPercent / 100;
+    final discountedPrice = itemRate - discountAmount;
+    final gstAmount = discountedPrice * gstRate / 100;
+    final totalAmount = discountedPrice + gstAmount;
+
+    setState(() {
+      // update discount deducted amount (price after discount before GST)
+      _discountDeductedAmountController.text = discountedPrice.toStringAsFixed(
+        2,
+      );
+      // Update GST amount and total amount
+      _gstAmountController.text = gstAmount.toStringAsFixed(2);
+      _totalAmountController.text = totalAmount.toStringAsFixed(2);
+
+      // Force rounding in UI for discount and GST rate
+      if (_discountController.text.isNotEmpty) {
+        _discountController.text = formatToRounded(_discountController.text);
+        _discountController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _discountController.text.length),
+        );
+      }
+
+      if (_gstRateController.text.isNotEmpty) {
+        _gstRateController.text = formatToRounded(_gstRateController.text);
+        _gstRateController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _gstRateController.text.length),
+        );
+      }
+
+      if (_mrpAmountController.text.isEmpty ||
+          double.tryParse(_mrpAmountController.text) == itemRate) {
+        _mrpAmountController.text = totalAmount.toStringAsFixed(2);
+      }
+    });
+  }
+
   Future<void> _fetchItemData(String itemName) async {
     setState(() => _isLoading = true);
 
@@ -70,13 +134,20 @@ class _ItemMasterState extends State<ItemMaster> {
           _itemCodeController.text = data.itemCode.toString();
           _itemNameController.text = data.itemName;
           _uomController.text = data.uom;
-          _itemRateAmountController.text = data.itemRateAmount.toString();
+          _itemRateAmountController.text = data.itemRateAmount.toStringAsFixed(
+            2,
+          );
+          _discountController.text = data.discount.toString();
+          _discountDeductedAmountController.text = data.discountDeductedAmount
+              .toStringAsFixed(2);
           _gstRateController.text = data.gstRate.toString();
-          _gstAmountController.text = data.gstAmount.toString();
-          _totalAmountController.text = data.totalAmount.toString();
-          _mrpAmountController.text = data.mrpAmount.toString();
+          _gstAmountController.text = data.gstAmount.toStringAsFixed(2);
+          _totalAmountController.text = data.totalAmount.toStringAsFixed(2);
+          _mrpAmountController.text = data.mrpAmount.toStringAsFixed(2);
           _selectedStatus = data.itemStatus ? 'Active' : 'Inactive';
         });
+
+        _calculateAmounts();
       } else {
         if (mounted) {
           ScaffoldMessenger.of(
@@ -107,6 +178,16 @@ class _ItemMasterState extends State<ItemMaster> {
               ? _uomController.text.trim()
               : 'Nos',
           itemRateAmount: double.parse(_itemRateAmountController.text.trim()),
+          discount: double.parse(
+            _discountController.text.trim().isEmpty
+                ? '0'
+                : _discountController.text.trim(),
+          ),
+          discountDeductedAmount: double.parse(
+            _discountDeductedAmountController.text.trim().isEmpty
+                ? '0'
+                : _discountDeductedAmountController.text.trim(),
+          ),
           gstRate: double.parse(_gstRateController.text.trim()),
           gstAmount: double.parse(_gstAmountController.text.trim()),
           totalAmount: double.parse(_totalAmountController.text.trim()),
@@ -118,13 +199,11 @@ class _ItemMasterState extends State<ItemMaster> {
         bool success;
 
         if (_isEditing && _itemMasterData != null) {
-          // Update existing item
           success = await firebaseService.updateItemMasterDataByItemName(
             _itemMasterData!.itemName,
             itemData,
           );
         } else {
-          // Create new item - check if item code exists
           final existingItem = await firebaseService.getItemByItemCode(
             itemData.itemCode,
           );
@@ -158,11 +237,16 @@ class _ItemMasterState extends State<ItemMaster> {
           );
 
           if (success) {
-            // clear all fields after successful save
             _itemCodeController.clear();
             _itemNameController.clear();
             _uomController.text = 'Nos';
             _itemRateAmountController.clear();
+            _discountController.clear();
+            _discountDeductedAmountController.clear();
+            _gstRateController.clear();
+            _gstAmountController.clear();
+            _totalAmountController.clear();
+            _mrpAmountController.clear();
             _itemMasterData = null;
             _formKey.currentState?.reset();
 
@@ -192,6 +276,8 @@ class _ItemMasterState extends State<ItemMaster> {
     _itemNameController.dispose();
     _uomController.dispose();
     _itemRateAmountController.dispose();
+    _discountController.dispose();
+    _discountDeductedAmountController.dispose();
     _gstRateController.dispose();
     _gstAmountController.dispose();
     _totalAmountController.dispose();
@@ -238,7 +324,6 @@ class _ItemMasterState extends State<ItemMaster> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Item Code Field
                       CompactFormField(
                         controller: _itemCodeController,
                         label: 'Item Code',
@@ -253,8 +338,6 @@ class _ItemMasterState extends State<ItemMaster> {
                           return null;
                         },
                       ),
-
-                      // Item Name Field
                       CompactFormField(
                         controller: _itemNameController,
                         label: 'Item Name',
@@ -265,8 +348,6 @@ class _ItemMasterState extends State<ItemMaster> {
                           return null;
                         },
                       ),
-
-                      // UOM Field
                       CompactFormField(
                         controller: _uomController,
                         label: 'Unit of Measurement',
@@ -275,18 +356,19 @@ class _ItemMasterState extends State<ItemMaster> {
                         isReadOnly: widget.isDisplayMode,
                         fieldWidth: 0.25,
                       ),
-
-                      // Amount Field
                       CompactFormField(
                         controller: _itemRateAmountController,
                         label: 'Amount',
                         icon: Icons.currency_rupee,
-                        keyboardType: TextInputType.numberWithOptions(
+                        keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
                         isReadOnly: widget.isDisplayMode,
                         textAlign: TextAlign.right,
                         fieldWidth: 0.25,
+                        onChanged: (_) => _calculateAmounts(),
+                        onEditingComplete: () =>
+                            _formatDecimalInput(_itemRateAmountController),
                         validator: (value) {
                           if (value == null || value.isEmpty) return 'Required';
                           if (double.tryParse(value) == null) {
@@ -295,18 +377,55 @@ class _ItemMasterState extends State<ItemMaster> {
                           return null;
                         },
                       ),
-
-                      // GST Rate Field
                       CompactFormField(
-                        controller: _gstRateController,
-                        label: 'GST Rate',
-                        icon: Icons.percent,
-                        keyboardType: TextInputType.numberWithOptions(
+                        controller: _discountController,
+                        label: 'Discount',
+                        icon: Icons.discount,
+                        keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
                         isReadOnly: widget.isDisplayMode,
                         textAlign: TextAlign.right,
                         fieldWidth: 0.25,
+                        isPercentage: true,
+                        onChanged: (_) => _calculateAmounts(),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return null;
+                          final discountValue = double.tryParse(value);
+                          if (discountValue == null) return 'Invalid discount';
+                          if (discountValue < 0 || discountValue > 100) {
+                            return 'Must be 0-100';
+                          }
+                          return null;
+                        },
+                      ),
+                      CompactFormField(
+                        controller: _discountDeductedAmountController,
+                        label: 'Discount Deducted Amount',
+                        icon: Icons.discount,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        isReadOnly: widget.isDisplayMode,
+                        textAlign: TextAlign.right,
+                        fieldWidth: 0.25,
+                        onChanged: (_) => _calculateAmounts(),
+                        onEditingComplete: () => _formatDecimalInput(
+                          _discountDeductedAmountController,
+                        ),
+                      ),
+                      CompactFormField(
+                        controller: _gstRateController,
+                        label: 'GST Rate',
+                        icon: Icons.receipt,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        isReadOnly: widget.isDisplayMode,
+                        textAlign: TextAlign.right,
+                        fieldWidth: 0.25,
+                        isPercentage: true,
+                        onChanged: (_) => _calculateAmounts(),
                         validator: (value) {
                           if (value == null || value.isEmpty) return 'Required';
                           if (double.tryParse(value) == null) {
@@ -315,58 +434,44 @@ class _ItemMasterState extends State<ItemMaster> {
                           return null;
                         },
                       ),
-
-                      // GST Amount Field
                       CompactFormField(
                         controller: _gstAmountController,
                         label: 'GST Amount',
                         icon: Icons.currency_rupee,
-                        keyboardType: TextInputType.numberWithOptions(
+                        keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        isReadOnly: widget.isDisplayMode,
+                        isReadOnly: true,
                         textAlign: TextAlign.right,
                         fieldWidth: 0.25,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return 'Required';
-                          if (double.tryParse(value) == null) {
-                            return 'Invalid amount';
-                          }
-                          return null;
-                        },
+                        onEditingComplete: () =>
+                            _formatDecimalInput(_gstAmountController),
                       ),
-
-                      // Total Amount Field
                       CompactFormField(
                         controller: _totalAmountController,
                         label: 'Total Amount',
                         icon: Icons.currency_rupee,
-                        keyboardType: TextInputType.numberWithOptions(
+                        keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        isReadOnly: widget.isDisplayMode,
+                        isReadOnly: true,
                         textAlign: TextAlign.right,
                         fieldWidth: 0.25,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return 'Required';
-                          if (double.tryParse(value) == null) {
-                            return 'Invalid amount';
-                          }
-                          return null;
-                        },
+                        onEditingComplete: () =>
+                            _formatDecimalInput(_totalAmountController),
                       ),
-
-                      // MRP Amount Field
                       CompactFormField(
                         controller: _mrpAmountController,
                         label: 'MRP Amount',
                         icon: Icons.currency_rupee,
-                        keyboardType: TextInputType.numberWithOptions(
+                        keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
                         isReadOnly: widget.isDisplayMode,
                         textAlign: TextAlign.right,
                         fieldWidth: 0.25,
+                        onEditingComplete: () =>
+                            _formatDecimalInput(_mrpAmountController),
                         validator: (value) {
                           if (value == null || value.isEmpty) return 'Required';
                           if (double.tryParse(value) == null) {
@@ -375,8 +480,6 @@ class _ItemMasterState extends State<ItemMaster> {
                           return null;
                         },
                       ),
-
-                      // Status Dropdown
                       CompactDropdown(
                         value: _selectedStatus,
                         items: ['Active', 'Inactive'],
@@ -386,13 +489,10 @@ class _ItemMasterState extends State<ItemMaster> {
                           if (value != null) {
                             setState(() {
                               _selectedStatus = value;
-                              // ignore: avoid_print
-                              print('Status changed to: $value'); // Debug print
                             });
                           }
                         },
                       ),
-
                       if (!widget.isDisplayMode) ...[
                         const SizedBox(height: 16),
                         SizedBox(
@@ -412,7 +512,7 @@ class _ItemMasterState extends State<ItemMaster> {
                                   )
                                 : Text(
                                     _isEditing ? 'UPDATE ITEM' : 'SAVE ITEM',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.white,

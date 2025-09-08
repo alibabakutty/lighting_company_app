@@ -15,7 +15,7 @@ class CompactDropdown extends StatelessWidget {
     required this.label,
     required this.isReadOnly,
     required this.onChanged,
-    this.fieldWidth = 0.25,
+    this.fieldWidth = 0.30,
   });
 
   @override

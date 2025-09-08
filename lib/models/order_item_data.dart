@@ -4,6 +4,8 @@ class OrderItem {
   final double quantity;
   final String uom;
   final double itemRateAmount;
+  final double discount;
+  final double discountDeductedAmount;
   final double gstRate;
   final double gstAmount;
   final double totalAmount;
@@ -16,6 +18,8 @@ class OrderItem {
     required this.quantity,
     required this.uom,
     required this.itemRateAmount,
+    required this.discount,
+    required this.discountDeductedAmount,
     required this.gstRate,
     required this.gstAmount,
     required this.totalAmount,
@@ -30,6 +34,8 @@ class OrderItem {
     quantity: 1.0,
     uom: '',
     itemRateAmount: 0.0,
+    discount: 0.0,
+    discountDeductedAmount: 0.0,
     gstRate: 0.0,
     gstAmount: 0.0,
     totalAmount: 0.0,
@@ -44,6 +50,8 @@ class OrderItem {
     double? quantity,
     String? uom,
     double? itemRateAmount,
+    double? discount,
+    double? discountDeductedAmount,
     double? gstRate,
     double? gstAmount,
     double? totalAmount,
@@ -56,6 +64,9 @@ class OrderItem {
       uom: uom ?? this.uom,
       quantity: quantity ?? this.quantity,
       itemRateAmount: itemRateAmount ?? this.itemRateAmount,
+      discount: discount ?? this.discount,
+      discountDeductedAmount:
+          discountDeductedAmount ?? this.discountDeductedAmount,
       gstRate: gstRate ?? this.gstRate,
       gstAmount: gstAmount ?? this.gstAmount,
       totalAmount: totalAmount ?? this.totalAmount,
@@ -74,6 +85,8 @@ class OrderItem {
       'quantity': quantity,
       'uom': uom,
       'itemRateAmount': itemRateAmount,
+      'discount': discount,
+      'discountDeductedAmount': discountDeductedAmount,
       'gstRate': gstRate,
       'gstAmount': gstAmount,
       'totalAmount': totalAmount,
@@ -90,6 +103,8 @@ class OrderItem {
       quantity: map['quantity']?.toDouble() ?? 0.0,
       uom: map['uom'] ?? '',
       itemRateAmount: map['itemRateAmount']?.toDouble() ?? 0.0,
+      discount: map['discount']?.toDouble() ?? 0.0,
+      discountDeductedAmount: map['discountDeductedAmount']?.toDouble() ?? 0.0,
       gstRate: map['gstRate']?.toDouble() ?? 0.0,
       gstAmount: map['gstAmount']?.toDouble() ?? 0.0,
       totalAmount: map['totalAmount']?.toDouble() ?? 0.0,
@@ -108,6 +123,8 @@ class OrderItem {
         other.quantity == quantity &&
         other.uom == uom &&
         other.itemRateAmount == itemRateAmount &&
+        other.discount == discount &&
+        other.discountDeductedAmount == discountDeductedAmount &&
         other.gstRate == gstRate &&
         other.gstAmount == gstAmount &&
         other.totalAmount == totalAmount &&
@@ -124,6 +141,8 @@ class OrderItem {
       quantity.hashCode,
       uom.hashCode,
       itemRateAmount.hashCode,
+      discount.hashCode,
+      discountDeductedAmount.hashCode,
       gstRate.hashCode,
       gstAmount.hashCode,
       totalAmount.hashCode,
@@ -141,6 +160,8 @@ class OrderItem {
         'quantity: $quantity, '
         'uom: $uom, '
         'itemNetAmount: $itemNetAmount, '
+        'discount: $discount, '
+        'discountDeductedAmount: $discountDeductedAmount, '
         'gstRate: $gstRate, '
         'gstAmount: $gstAmount, '
         'totalAmount: $totalAmount, '

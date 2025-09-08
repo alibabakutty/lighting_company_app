@@ -109,14 +109,15 @@ class _ImportItemState extends State<ImportItem> {
               ? _parseString(row[2])
               : 'Nos';
           final itemRateAmount = Decimal.parse(_parseDouble(row[3]).toString());
-          final gstRate = row.length > 4 ? _parseDouble(row[4]) : 0.0;
-          final gstAmount = row.length > 5 ? _parseDouble(row[5]) : 0.0;
-          final totalAmount = row.length > 6 ? _parseDouble(row[6]) : 0.0;
-          final mrpAmount = row.length > 7 ? _parseDouble(row[7]) : 0.0;
-          final itemStatus = _parseBool(row.length > 8 ? row[8] : true) ?? true;
+          final discount = row.length > 4 ? _parseDouble(row[4]) : 0.0;
+          final gstRate = row.length > 5 ? _parseDouble(row[5]) : 0.0;
+          final gstAmount = row.length > 6 ? _parseDouble(row[6]) : 0.0;
+          final totalAmount = row.length > 7 ? _parseDouble(row[7]) : 0.0;
+          final mrpAmount = row.length > 8 ? _parseDouble(row[8]) : 0.0;
+          final itemStatus = _parseBool(row.length > 9 ? row[9] : true) ?? true;
 
-          final timestamp = row.length > 9 && row[9] != null
-              ? _parseTimestamp(row[9].toString())
+          final timestamp = row.length > 10 && row[10] != null
+              ? _parseTimestamp(row[10].toString())
               : Timestamp.now();
 
           final item = ItemMasterData(
@@ -124,6 +125,7 @@ class _ImportItemState extends State<ImportItem> {
             itemName: itemName,
             uom: uom,
             itemRateAmount: itemRateAmount.toDouble(),
+            discount: discount,
             gstRate: gstRate,
             gstAmount: gstAmount,
             totalAmount: totalAmount,
@@ -262,6 +264,7 @@ Total: ${table.rows.length - 1}''';
                           Text('• UOM (required, default to "Nos")'),
                           Text('• Item Rate Amount (required)'),
                           Text('• GST Rate (optional, default 0.0)'),
+                          Text('• Discount (optional, default 0.0)'),
                           Text('• GST Amount (optional, default 0.0)'),
                           Text('• Total Amount (optional, default 0.0)'),
                           Text('• MRP Amount (optional, default 0.0)'),
@@ -345,6 +348,7 @@ class ItemMasterData {
   final String itemName;
   final String uom;
   final double itemRateAmount;
+  final double discount;
   final double gstRate;
   final double gstAmount;
   final double totalAmount;
@@ -357,6 +361,7 @@ class ItemMasterData {
     required this.itemName,
     this.uom = 'Nos',
     required this.itemRateAmount,
+    this.discount = 0.0,
     this.gstRate = 0.0,
     this.gstAmount = 0.0,
     this.totalAmount = 0.0,
@@ -371,6 +376,7 @@ class ItemMasterData {
       itemName: data['item_name'] ?? '',
       uom: data['uom'] ?? 'Nos',
       itemRateAmount: data['item_rate_amount'] ?? 0.0,
+      discount: data['discount'] ?? 0.0,
       gstRate: data['gst_rate'] ?? 0.0,
       gstAmount: data['gst_amount'] ?? 0.0,
       totalAmount: data['total_amount'] ?? 0.0,
@@ -386,6 +392,7 @@ class ItemMasterData {
       'item_name': itemName,
       'uom': uom,
       'item_rate_amount': itemRateAmount,
+      'discount': discount,
       'gst_rate': gstRate,
       'gst_amount': gstAmount,
       'total_amount': totalAmount,

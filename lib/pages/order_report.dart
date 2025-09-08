@@ -48,6 +48,10 @@ class _OrderReportState extends State<OrderReport> {
     super.dispose();
   }
 
+  String formatPercentage(double percentage) {
+    return '${percentage.round()}%';
+  }
+
   // Helper function to create a row of CellValues from an order
   List<excel.CellValue> _createRow(Map<String, dynamic> order) {
     final item = order['itemData'] as Map<String, dynamic>?;
@@ -62,6 +66,15 @@ class _OrderReportState extends State<OrderReport> {
           (item['quantity'] ?? 1);
     }
 
+    // Calculate discount deducted amount
+    double discountDeductedAmount = item?['discountDeductedAmount'] ?? 0.0;
+    if (discountDeductedAmount == 0 &&
+        item?['itemRateAmount'] != null &&
+        item?['discount'] != null) {
+      final discountAmount = item!['itemRateAmount'] * item['discount'] / 100;
+      discountDeductedAmount = item['itemRateAmount'] - discountAmount;
+    }
+
     return [
       excel.TextCellValue(
         DateFormat('dd-MM-yyyy').format(order['createdAt'].toDate()),
@@ -73,10 +86,17 @@ class _OrderReportState extends State<OrderReport> {
       excel.TextCellValue(item?['itemName']?.toString() ?? 'N/A'),
       excel.DoubleCellValue(item?['quantity']?.toDouble() ?? 0.0),
       excel.TextCellValue(item?['uom']?.toString() ?? 'Nos'),
+      excel.DoubleCellValue(item?['itemRateAmount']?.toDouble() ?? 0.0),
+      excel.TextCellValue(
+        item?['discount'] != null
+            ? formatPercentage(item!['discount'].toDouble())
+            : '0%',
+      ),
+      excel.DoubleCellValue(discountDeductedAmount),
       excel.TextCellValue(
         item?['gstRate'] != null
-            ? '${item!['gstRate'].toStringAsFixed(2)}%'
-            : 'N/A',
+            ? formatPercentage(item!['gstRate'].toDouble())
+            : '0%',
       ),
       excel.DoubleCellValue(gstAmount),
       excel.DoubleCellValue(item?['totalAmount']?.toDouble() ?? 0.0),
@@ -108,6 +128,9 @@ class _OrderReportState extends State<OrderReport> {
         'Item Name',
         'Quantity',
         'UOM',
+        'Rate',
+        'Disc %',
+        'Disc Amt',
         'GST %',
         'GST Amount',
         'Rate (GST)',
@@ -139,6 +162,9 @@ class _OrderReportState extends State<OrderReport> {
         '',
         'TOTAL',
         _totalQuantity,
+        '',
+        '',
+        '',
         '',
         '',
         '',
@@ -691,12 +717,50 @@ class _OrderReportState extends State<OrderReport> {
                   Alignment.center,
                 ),
               ),
+              // Rate Amount - NEW COLUMN
+              DataCell(
+                _buildCell(
+                  item?['itemRateAmount'] != null
+                      ? formatAmount(item!['itemRateAmount'].toDouble())
+                      : 'N/A',
+                  cellTextStyle,
+                  Alignment.centerRight,
+                ),
+              ),
+              // Discount - NEW COLUMN
+              DataCell(
+                _buildCell(
+                  item?['discount'] != null
+                      ? formatPercentage(item!['discount'].toDouble())
+                      : '0%',
+                  cellTextStyle,
+                  Alignment.centerRight,
+                ),
+              ),
+              DataCell(
+                _buildCell(
+                  item?['discountDeductedAmount'] != null
+                      ? formatAmount(item!['discountDeductedAmount'].toDouble())
+                      : (item?['itemRateAmount'] != null &&
+                                item?['discount'] != null
+                            ? formatAmount(
+                                (item!['itemRateAmount'] -
+                                        (item['itemRateAmount'] *
+                                            item['discount'] /
+                                            100))
+                                    .toDouble(),
+                              )
+                            : 'N/A'),
+                  cellTextStyle,
+                  Alignment.centerRight,
+                ),
+              ),
               // GST Rate
               DataCell(
                 _buildCell(
                   item?['gstRate'] != null
-                      ? '${item!['gstRate'].toStringAsFixed(2)}%'
-                      : 'N/A',
+                      ? formatPercentage(item!['gstRate'].toDouble())
+                      : '0%',
                   cellTextStyle,
                   Alignment.centerRight,
                 ),
@@ -817,6 +881,28 @@ class _OrderReportState extends State<OrderReport> {
             DataColumn(
               label: _buildHeaderCell('UOM', headerTextStyle, Alignment.center),
             ),
+            // New columns
+            DataColumn(
+              label: _buildHeaderCell(
+                'Rate',
+                headerTextStyle,
+                Alignment.centerRight,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'Disc %',
+                headerTextStyle,
+                Alignment.centerRight,
+              ),
+            ),
+            DataColumn(
+              label: _buildHeaderCell(
+                'Disc Amt',
+                headerTextStyle,
+                Alignment.centerRight,
+              ),
+            ),
             DataColumn(
               label: _buildHeaderCell(
                 'GST %',
@@ -847,7 +933,7 @@ class _OrderReportState extends State<OrderReport> {
             ),
             DataColumn(
               label: _buildHeaderCell(
-                'Net Amt',
+                'Net Amt (GST)',
                 headerTextStyle,
                 Alignment.centerRight,
               ),
