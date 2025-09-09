@@ -12,6 +12,7 @@ class OrderItemRow extends StatefulWidget {
   final Function(int, OrderItem) onItemSelectedWithData;
   final VoidCallback onItemSelected;
   final VoidCallback onAddNewRow;
+  final bool isDuplicateItem; // New parameter to indicate duplicate selection
 
   const OrderItemRow({
     super.key,
@@ -24,6 +25,7 @@ class OrderItemRow extends StatefulWidget {
     required this.onItemSelectedWithData,
     required this.onItemSelected,
     required this.onAddNewRow,
+    this.isDuplicateItem = false,
   });
 
   @override
@@ -150,7 +152,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
       itemCode: selectedItem.itemCode.toString(),
       itemName: selectedItem.itemName,
       itemRateAmount: selectedItem.itemRateAmount,
-      quantity: 1.0,
+      quantity: widget.isDuplicateItem ? 0.0 : 1.0, // Use flag to decide
       uom: selectedItem.uom,
       gstRate: selectedItem.gstRate,
       discount: selectedItem.discount,
@@ -158,12 +160,14 @@ class _OrderItemRowState extends State<OrderItemRow> {
       gstAmount: selectedItem.gstAmount,
       totalAmount: selectedItem.totalAmount,
       mrpAmount: selectedItem.mrpAmount,
-      itemNetAmount: selectedItem.discountDeductedAmount * 1.0,
+      itemNetAmount: widget.isDuplicateItem
+          ? 0.0
+          : selectedItem.discountDeductedAmount,
     );
 
-    _quantityController.text = '1';
+    _quantityController.text = widget.isDuplicateItem ? '0' : '1';
     _netAmountController.text = formatAmount(
-      selectedItem.discountDeductedAmount,
+      widget.isDuplicateItem ? 0.0 : selectedItem.discountDeductedAmount,
     );
     _itemNameController.text = selectedItem.itemName;
 
@@ -186,14 +190,13 @@ class _OrderItemRowState extends State<OrderItemRow> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // First Row - S.No and Product Name
+        // First Row
         Container(
           padding: const EdgeInsets.symmetric(vertical: 2.0),
           width: MediaQuery.of(context).size.width * 0.99,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // S.No
               SizedBox(
                 width: 20,
                 height: 32,
@@ -208,7 +211,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
                   ),
                 ),
               ),
-              // Product Name
               SizedBox(
                 width: 285,
                 height: 32,
@@ -233,7 +235,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
             ],
           ),
         ),
-        // Second Row - Qty, Rate, Amount, Buttons
+        // Second Row
         if (_showSecondaryFields)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 2.0),
@@ -242,7 +244,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(width: 30),
-                // Qty
                 SizedBox(
                   width: 40,
                   height: 32,
@@ -268,7 +269,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
                   ),
                 ),
                 const SizedBox(width: 4),
-                // UOM
                 SizedBox(
                   width: 45,
                   height: 32,
@@ -290,7 +290,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
                   ),
                 ),
                 const SizedBox(width: 4),
-                // Rate
                 SizedBox(
                   width: 70,
                   height: 32,
@@ -317,7 +316,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
                   ),
                 ),
                 const SizedBox(width: 4),
-                // Discount
                 SizedBox(
                   width: 45,
                   height: 32,
@@ -339,7 +337,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
                   ),
                 ),
                 const SizedBox(width: 4),
-                // Amount
                 SizedBox(
                   width: 70,
                   height: 32,
@@ -362,7 +359,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
                   ),
                 ),
                 const SizedBox(width: 4),
-                // Add button
                 SizedBox(
                   width: 32,
                   height: 32,
@@ -376,7 +372,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
                   ),
                 ),
                 const SizedBox(width: 2),
-                // Delete button
                 SizedBox(
                   width: 32,
                   height: 32,

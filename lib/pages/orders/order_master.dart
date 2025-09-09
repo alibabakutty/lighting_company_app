@@ -544,65 +544,42 @@ class _OrderMasterState extends State<OrderMaster> {
                                               orderItems[index] = updatedItem;
                                             });
                                           },
-                                          // onUpdate: (index, updatedItem) {
-                                          //   setState(
-                                          //     () => orderItems[index] =
-                                          //         updatedItem,
-                                          //   );
-                                          //   if (_isDuplicateItem(
-                                          //     updatedItem.itemCode,
-                                          //   )) {
-                                          //     ScaffoldMessenger.of(
-                                          //       context,
-                                          //     ).showSnackBar(
-                                          //       SnackBar(
-                                          //         content: Text(
-                                          //           'Item "${updatedItem.itemName}" already added. And this is additional quantity!',
-                                          //         ),
-                                          //         backgroundColor: Colors.blue,
-                                          //       ),
-                                          //     );
-                                          //   }
-                                          // },
                                           onItemSelectedWithData: (index, selectedItem) {
                                             setState(() {
-                                              // check if item already exists
                                               final existingIndex = orderItems
                                                   .indexWhere(
                                                     (item) =>
                                                         item.itemCode ==
-                                                        selectedItem.itemCode,
+                                                            selectedItem
+                                                                .itemCode &&
+                                                        item.itemName ==
+                                                            selectedItem
+                                                                .itemName,
                                                   );
-                                              if (existingIndex != -1) {
-                                                // increase quantity if exists
-                                                final existingItem =
-                                                    orderItems[existingIndex];
-                                                final updatedItem = existingItem
-                                                    .copyWith(
-                                                      quantity:
-                                                          existingItem
-                                                              .quantity +
-                                                          1,
-                                                    );
-                                                orderItems[existingIndex] =
-                                                    updatedItem;
 
+                                              final isDuplicate =
+                                                  existingIndex != -1;
+
+                                              if (isDuplicate &&
+                                                  index != existingIndex) {
+                                                // If it's a duplicate but not the same row, show it as new row with quantity 0
+                                                orderItems[index] = selectedItem
+                                                    .copyWith(quantity: 0);
                                                 ScaffoldMessenger.of(
                                                   context,
                                                 ).showSnackBar(
                                                   SnackBar(
                                                     content: Text(
-                                                      'Item "${selectedItem.itemName}" quantity increased by 1 as it already exists.',
+                                                      'Duplicate item selected, quantity can be entered manually.',
                                                     ),
                                                     backgroundColor:
-                                                        Colors.blue,
+                                                        Colors.orange,
                                                   ),
                                                 );
                                               } else {
-                                                // update the current row with new item
+                                                // Normal case, just update this row
                                                 orderItems[index] =
                                                     selectedItem;
-                                                // Optionally add new empty row if it's last one
                                                 if (index ==
                                                     orderItems.length - 1) {
                                                   orderItems.add(
@@ -623,6 +600,19 @@ class _OrderMasterState extends State<OrderMaster> {
                                             }
                                           }),
                                           onAddNewRow: _addNewRow,
+                                          isDuplicateItem:
+                                              orderItems
+                                                  .where(
+                                                    (item) =>
+                                                        item.itemCode ==
+                                                            orderItems[i]
+                                                                .itemCode &&
+                                                        item.itemName ==
+                                                            orderItems[i]
+                                                                .itemName,
+                                                  )
+                                                  .length >
+                                              1,
                                         ),
                                     ],
                                   ),
