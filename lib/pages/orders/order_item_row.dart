@@ -32,6 +32,7 @@ class OrderItemRow extends StatefulWidget {
 
 class _OrderItemRowState extends State<OrderItemRow> {
   late FocusNode _itemSearchFocusNode;
+  late FocusNode _quantityFocusNode;
   late TextEditingController _itemNameController;
   final TextEditingController _itemSearchController = TextEditingController();
   late TextEditingController _quantityController;
@@ -45,6 +46,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
   void initState() {
     super.initState();
     _itemSearchFocusNode = FocusNode();
+    _quantityFocusNode = FocusNode();
     _quantityController = TextEditingController(
       text: widget.item.quantity % 1 == 0
           ? widget.item.quantity.toInt().toString()
@@ -62,30 +64,10 @@ class _OrderItemRowState extends State<OrderItemRow> {
     );
     _itemNameController = TextEditingController(text: widget.item.itemName);
 
-    // show secondary fields if item is already selected
     _showSecondaryFields = widget.item.itemCode.isNotEmpty;
 
     _quantityController.addListener(_updateAmount);
     _itemNameController.addListener(_handleNameChange);
-  }
-
-  void _handleNameChange() {
-    if (_itemNameController.text.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          widget.onUpdate(widget.index, OrderItem.empty());
-        }
-      });
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          widget.onUpdate(
-            widget.index,
-            widget.item.copyWith(itemName: _itemNameController.text),
-          );
-        }
-      });
-    }
   }
 
   @override
@@ -127,7 +109,27 @@ class _OrderItemRowState extends State<OrderItemRow> {
     _itemNameController.dispose();
     _itemSearchController.dispose();
     _itemSearchFocusNode.dispose();
+    _quantityFocusNode.dispose();
     super.dispose();
+  }
+
+  void _handleNameChange() {
+    if (_itemNameController.text.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          widget.onUpdate(widget.index, OrderItem.empty());
+        }
+      });
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          widget.onUpdate(
+            widget.index,
+            widget.item.copyWith(itemName: _itemNameController.text),
+          );
+        }
+      });
+    }
   }
 
   void _updateAmount() {
@@ -169,10 +171,15 @@ class _OrderItemRowState extends State<OrderItemRow> {
       _showSecondaryFields = true;
     });
 
-    // widget.onUpdate(widget.index, newItem);
     widget.onItemSelectedWithData(widget.index, newItem);
     widget.onItemSelected();
     _itemSearchController.clear();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _quantityFocusNode.requestFocus();
+      }
+    });
   }
 
   @override
@@ -182,8 +189,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
         // First Row - S.No and Product Name
         Container(
           padding: const EdgeInsets.symmetric(vertical: 2.0),
-          width:
-              MediaQuery.of(context).size.width * 0.99, // 90% of screen width
+          width: MediaQuery.of(context).size.width * 0.99,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -202,7 +208,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
                   ),
                 ),
               ),
-
               // Product Name
               SizedBox(
                 width: 285,
@@ -228,14 +233,11 @@ class _OrderItemRowState extends State<OrderItemRow> {
             ],
           ),
         ),
-
-        // Second Row - Qty, Rate, Amount, Buttons (only show if item selected)
+        // Second Row - Qty, Rate, Amount, Buttons
         if (_showSecondaryFields)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 2.0),
-            width:
-                MediaQuery.of(context).size.width * 0.99, // 90% of screen width
-
+            width: MediaQuery.of(context).size.width * 0.99,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -246,6 +248,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
                   height: 32,
                   child: TextFormField(
                     controller: _quantityController,
+                    focusNode: _quantityFocusNode,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(
@@ -258,7 +261,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
-                    keyboardType: TextInputType.numberWithOptions(
+                    keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                     onChanged: (_) => _updateAmount(),
@@ -314,7 +317,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
                   ),
                 ),
                 const SizedBox(width: 4),
-                // DISCOUNT
+                // Discount
                 SizedBox(
                   width: 45,
                   height: 32,
@@ -399,7 +402,6 @@ class _OrderItemRowState extends State<OrderItemRow> {
       textEditingController: _itemSearchController,
       optionsBuilder: (TextEditingValue textEditingValue) {
         if (widget.isLoadingItems) return const Iterable.empty();
-
         return widget.allItems.where((item) {
           if (textEditingValue.text.isEmpty) return true;
           final searchTerm = textEditingValue.text.toLowerCase();
@@ -441,9 +443,7 @@ class _OrderItemRowState extends State<OrderItemRow> {
                         ),
                         child: ListTile(
                           dense: true,
-                          visualDensity: const VisualDensity(
-                            vertical: -4,
-                          ), // Extremely compact
+                          visualDensity: const VisualDensity(vertical: -4),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 8.0,
                           ),
@@ -464,6 +464,5 @@ class _OrderItemRowState extends State<OrderItemRow> {
 }
 
 String formatAmount(double amount) {
-  // Format with 2 decimal places and comma separators
   return '₹${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
 }
