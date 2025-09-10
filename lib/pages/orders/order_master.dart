@@ -589,6 +589,55 @@ class _OrderMasterState extends State<OrderMaster> {
                                               }
                                             });
                                           },
+                                          onQuantityChanged: (index, newQuantity) {
+                                            setState(() {
+                                              final editedItem =
+                                                  orderItems[index];
+                                              final existingIndex = orderItems
+                                                  .indexWhere(
+                                                    (item) =>
+                                                        item.itemCode ==
+                                                            editedItem
+                                                                .itemCode &&
+                                                        item.itemName ==
+                                                            editedItem
+                                                                .itemName &&
+                                                        item != editedItem,
+                                                  );
+
+                                              if (existingIndex != -1) {
+                                                // Merge quantities into original row
+                                                orderItems[existingIndex] =
+                                                    orderItems[existingIndex]
+                                                        .copyWith(
+                                                          quantity:
+                                                              orderItems[existingIndex]
+                                                                  .quantity +
+                                                              newQuantity,
+                                                        );
+
+                                                // Remove duplicate row
+                                                orderItems.removeAt(index);
+
+                                                // Add an empty row if needed
+                                                if (orderItems.isEmpty ||
+                                                    orderItems
+                                                        .last
+                                                        .itemCode
+                                                        .isNotEmpty) {
+                                                  orderItems.add(
+                                                    OrderItemExtension.empty(),
+                                                  );
+                                                }
+                                              } else {
+                                                // Normal update
+                                                orderItems[index] = editedItem
+                                                    .copyWith(
+                                                      quantity: newQuantity,
+                                                    );
+                                              }
+                                            });
+                                          },
                                           onItemSelected: () => setState(() {
                                             if (i == orderItems.length - 1 &&
                                                 orderItems[i]

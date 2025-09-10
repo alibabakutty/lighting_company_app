@@ -13,6 +13,7 @@ class OrderItemRow extends StatefulWidget {
   final VoidCallback onItemSelected;
   final VoidCallback onAddNewRow;
   final bool isDuplicateItem; // New parameter to indicate duplicate selection
+  final Function(int index, double newQuantity)? onQuantityChanged;
 
   const OrderItemRow({
     super.key,
@@ -26,6 +27,7 @@ class OrderItemRow extends StatefulWidget {
     required this.onItemSelected,
     required this.onAddNewRow,
     this.isDuplicateItem = false,
+    this.onQuantityChanged,
   });
 
   @override
@@ -266,6 +268,19 @@ class _OrderItemRowState extends State<OrderItemRow> {
                       decimal: true,
                     ),
                     onChanged: (_) => _updateAmount(),
+                    onFieldSubmitted: (value) {
+                      final qty = double.tryParse(value) ?? 0;
+                      if (qty > 0 && widget.onQuantityChanged != null) {
+                        widget.onQuantityChanged!(widget.index, qty);
+                      }
+                    },
+                    onEditingComplete: () {
+                      final qty =
+                          double.tryParse(_quantityController.text) ?? 0;
+                      if (qty > 0 && widget.onQuantityChanged != null) {
+                        widget.onQuantityChanged!(widget.index, qty);
+                      }
+                    },
                   ),
                 ),
                 const SizedBox(width: 4),
